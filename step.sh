@@ -95,8 +95,7 @@ cd "${output_dir}"
 output_dir="$(pwd)"
 cd -
 
-archive_tmp_dir=$(mktemp -d -t bitrise-xcarchive)
-archive_path="${archive_tmp_dir}/${scheme}.xcarchive"
+archive_path="${output_dir}/${scheme}.xcarchive"
 file_path="${output_dir}/${scheme}.app"
 dsym_zip_path="${output_dir}/${scheme}.dSYM.zip"
 
