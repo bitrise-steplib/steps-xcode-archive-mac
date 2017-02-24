@@ -12,6 +12,7 @@ import (
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-tools/go-xcode/exportoptions"
 	"github.com/bitrise-tools/go-xcode/utility"
 	"github.com/bitrise-tools/go-xcode/xcodebuild"
 	"github.com/bitrise-tools/go-xcode/xcpretty"
@@ -334,5 +335,41 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable`)
 		if err := archiveCmd.Run(); err != nil {
 			failf("Archive failed, error: %s", err)
 		}
+	}
+
+	// Ensure xcarchive exists
+	if exist, err := pathutil.IsPathExists(archivePath); err != nil {
+		failf("Failed to check if archive exist, error: %s", err)
+	} else if !exist {
+		failf("No archive generated at: %s", archivePath)
+	}
+
+	fmt.Println()
+
+	log.Infof("Exporting APP from generated Archive ...")
+
+	exportCmd := xcodebuild.NewExportCommand()
+	exportCmd.SetArchivePath(archivePath)
+	exportCmd.SetExportDir(filePath)
+
+	exportMethod, err := exportoptions.ParseMethod(configs.ExportMethod)
+	if err != nil {
+		failf("Failed to parse export method, error: %s", err)
+	}
+
+	exportOptions := exportoptions.NewNonAppStoreOptions(exportMethod)
+
+	exportOptionsPlistString, err := exportOptions.String()
+	if err != nil {
+		failf("Failed to parse export options to string, error: %s", err)
+	}
+
+	exportCmd.SetExportOptionsPlist(exportOptionsPlistString)
+
+	log.Donef("$ %s", exportCmd.PrintableCmd())
+	fmt.Println()
+
+	if err := exportCmd.Run(); err != nil {
+		failf("Export failed, error: %s", err)
 	}
 }

@@ -7,6 +7,10 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "github.com/DHowett/go-plist",
+			"Rev": "fd61394c0abc85ba629ff8471fa35d4309cd6609"
+		},
+		{
 			"ImportPath": "github.com/bitrise-io/go-utils/colorstring",
 			"Rev": "5863e947430502abe15cb53a93e955259728ff66"
 		},
@@ -29,6 +33,10 @@
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/pathutil",
 			"Rev": "5863e947430502abe15cb53a93e955259728ff66"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-xcode/exportoptions",
+			"Rev": "2085f4cdcd4e0a6e9f513bfa93777a407273f220"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xcode/models",
