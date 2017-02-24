@@ -19,6 +19,11 @@ is_skippable: false
 deps:
   check_only:
   - name: xcode
+  brew:
+  - name: go
+toolkit:
+  go:
+    package_name: github.com/bitrise-steplib/steps-xcode-archive-mac
 run_if: ""
 inputs:
   - workdir: $BITRISE_SOURCE_DIR
