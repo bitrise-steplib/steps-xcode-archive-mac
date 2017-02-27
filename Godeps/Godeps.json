@@ -47,6 +47,10 @@
 			"Rev": "2085f4cdcd4e0a6e9f513bfa93777a407273f220"
 		},
 		{
+			"ImportPath": "github.com/bitrise-tools/go-xcode/xcarchive",
+			"Rev": "2085f4cdcd4e0a6e9f513bfa93777a407273f220"
+		},
+		{
 			"ImportPath": "github.com/bitrise-tools/go-xcode/xcodebuild",
 			"Rev": "2085f4cdcd4e0a6e9f513bfa93777a407273f220"
 		},

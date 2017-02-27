@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"path/filepath"
@@ -14,12 +16,15 @@ import (
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xcode/exportoptions"
 	"github.com/bitrise-tools/go-xcode/utility"
+	"github.com/bitrise-tools/go-xcode/xcarchive"
 	"github.com/bitrise-tools/go-xcode/xcodebuild"
 	"github.com/bitrise-tools/go-xcode/xcpretty"
 )
 
 const (
 	bitriseXcodeRawResultTextEnvKey = "BITRISE_XCODE_RAW_RESULT_TEXT_PATH"
+	bitriseExportedFilePath         = "BITRISE_EXPORTED_FILE_PATH"
+	bitriseDSYMDirPthEnvKey         = "BITRISE_DSYM_PATH"
 )
 
 // ConfigsModel ...
@@ -209,6 +214,65 @@ func ExportOutputFileContent(content, destinationPth, envKey string) error {
 	return ExportOutputFile(destinationPth, destinationPth, envKey)
 }
 
+func findIDEDistrubutionLogsPath(output string) (string, error) {
+	pattern := `IDEDistribution: -\[IDEDistributionLogging _createLoggingBundleAtPath:\]: Created bundle at path '(?P<log_path>.*)'`
+	re := regexp.MustCompile(pattern)
+
+	scanner := bufio.NewScanner(strings.NewReader(output))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if match := re.FindStringSubmatch(line); len(match) == 2 {
+			return match[1], nil
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+
+	return "", nil
+}
+
+func zip(sourceDir, destinationZipPth string) error {
+	parentDir := filepath.Dir(sourceDir)
+	dirName := filepath.Base(sourceDir)
+	cmd := command.New("/usr/bin/zip", "-rTy", destinationZipPth, dirName)
+	cmd.SetDir(parentDir)
+	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
+	if err != nil {
+		return fmt.Errorf("Failed to zip dir: %s, output: %s, error: %s", sourceDir, out, err)
+	}
+
+	return nil
+}
+
+// ExportOutputDirAsZip ...
+func ExportOutputDirAsZip(sourceDirPth, destinationPth, envKey string) error {
+	tmpDir, err := pathutil.NormalizedOSTempDirPath("__export_tmp_dir__")
+	if err != nil {
+		return err
+	}
+
+	base := filepath.Base(sourceDirPth)
+	tmpZipFilePth := filepath.Join(tmpDir, base+".zip")
+
+	if err := zip(sourceDirPth, tmpZipFilePth); err != nil {
+		return err
+	}
+
+	return ExportOutputFile(tmpZipFilePth, destinationPth, envKey)
+}
+
+// ExportOutputDir ...
+func ExportOutputDir(sourceDirPth, destinationDirPth, envKey string) error {
+	if sourceDirPth != destinationDirPth {
+		if err := command.CopyDir(sourceDirPth, destinationDirPth, true); err != nil {
+			return err
+		}
+	}
+
+	return ExportEnvironmentWithEnvman(envKey, destinationDirPth)
+}
+
 //--------------------
 // Main
 //--------------------
@@ -272,6 +336,8 @@ func main() {
 	archivePath := filepath.Join(archiveTempDir, fmt.Sprintf("%s.xcarchive", configs.Scheme))
 	log.Printf("- archivePath: %s", archivePath)
 
+	exportOptionsPath := filepath.Join(configs.OutputDir, "export_options.plist")
+
 	filePath := fmt.Sprintf("%s/%s.%s", configs.OutputDir, configs.Scheme, exportFormat)
 	log.Printf("- filePath: %s", filePath)
 
@@ -279,18 +345,33 @@ func main() {
 	log.Printf("- dsymZipPath: %s", dsymZipPath)
 
 	rawXcodebuildOutputLogPath := filepath.Join(configs.OutputDir, "raw-xcodebuild-output.log")
-
+	//ideDistributionLogsZipPath := filepath.Join(configs.OutputDir, "xcodebuild.xcdistributionlogs.zip")
+	//archiveZipPath := filepath.Join(configs.OutputDir, configs.Scheme+".xcarchive.zip")
 	fmt.Println()
 
 	// clean-up
-	if exists, err := pathutil.IsPathExists(filePath); err != nil {
-		failf("Failed to check if path exists, error: %s", err)
-	} else if exists {
-		log.Warnf("App at path (%s) already exists - removing it", filePath)
-		if err := os.RemoveAll(filePath); err != nil {
-			failf("Failed to remove path: %s, error: %s", filePath, err)
+	filesToCleanup := []string{
+		archivePath,
+		filePath,
+		dsymZipPath,
+		rawXcodebuildOutputLogPath,
+		//ideDistributionLogsZipPath,
+		//archiveZipPath,
+	}
+
+	for _, pth := range filesToCleanup {
+		if exist, err := pathutil.IsPathExists(pth); err != nil {
+			failf("Failed to check if path (%s) exist, error: %s", pth, err)
+		} else if exist {
+			if err := os.RemoveAll(pth); err != nil {
+				failf("Failed to remove path (%s), error: %s", pth, err)
+			}
 		}
 	}
+
+	// Create archive
+	log.Infof("Create archive ...")
+	fmt.Println()
 
 	archiveCmd := xcodebuild.NewArchiveCommand(configs.ProjectPath, (action == "-workspace"))
 	archiveCmd.SetScheme(configs.Scheme)
@@ -304,7 +385,6 @@ func main() {
 		log.Printf("Forcing Code Signing Identity: %s", configs.ForceCodeSignIdentity)
 		archiveCmd.SetForceCodeSignIdentity(configs.ForceCodeSignIdentity)
 	}
-
 	if configs.IsCleanBuild == "yes" {
 		archiveCmd.SetCustomBuildAction("clean")
 	}
@@ -346,30 +426,172 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable`)
 
 	fmt.Println()
 
+	// Export APP from generated archive
 	log.Infof("Exporting APP from generated Archive ...")
 
-	exportCmd := xcodebuild.NewExportCommand()
-	exportCmd.SetArchivePath(archivePath)
-	exportCmd.SetExportDir(filePath)
-
-	exportMethod, err := exportoptions.ParseMethod(configs.ExportMethod)
-	if err != nil {
-		failf("Failed to parse export method, error: %s", err)
+	envsToUnset := []string{"GEM_HOME", "GEM_PATH", "RUBYLIB", "RUBYOPT", "BUNDLE_BIN_PATH", "_ORIGINAL_GEM_PATH", "BUNDLE_GEMFILE"}
+	for _, key := range envsToUnset {
+		if err := os.Unsetenv(key); err != nil {
+			failf("Failed to unset (%s), error: %s", key, err)
+		}
 	}
 
-	exportOptions := exportoptions.NewNonAppStoreOptions(exportMethod)
+	// Legacy
+	if configs.ExportMethod == "none" {
+		log.Printf("Using legacy export")
+		fmt.Println()
 
-	exportOptionsPlistString, err := exportOptions.String()
-	if err != nil {
-		failf("Failed to parse export options to string, error: %s", err)
+		exportLegacyCmd := xcodebuild.NewLegacyExportCommand()
+		exportLegacyCmd.SetArchivePath(archivePath)
+		exportLegacyCmd.SetExportFormat(exportFormat)
+		exportLegacyCmd.SetExportPath(filePath)
+
+		if configs.OutputTool == "xcpretty" {
+			xcprettyCmd := xcpretty.New(exportLegacyCmd)
+
+			log.Donef("$ %s", xcprettyCmd.PrintableCmd())
+			fmt.Println()
+
+			if rawXcodebuildOut, err := xcprettyCmd.Run(); err != nil {
+				if err := ExportOutputFileContent(rawXcodebuildOut, rawXcodebuildOutputLogPath, bitriseXcodeRawResultTextEnvKey); err != nil {
+					log.Warnf("Failed to export %s, error: %s", bitriseXcodeRawResultTextEnvKey, err)
+				} else {
+					log.Warnf(`If you can't find the reason of the error in the log, please check the raw-xcodebuild-output.log
+The log file is stored in $BITRISE_DEPLOY_DIR, and its full path
+is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable`)
+				}
+
+				failf("Archive failed, error: %s", err)
+			}
+		} else {
+			log.Donef("$ %s", exportLegacyCmd.PrintableCmd())
+			fmt.Println()
+
+			if err := exportLegacyCmd.Run(); err != nil {
+				failf("Export failed, error: %s", err)
+			}
+		}
+
+		if err := ExportOutputDir(filePath, filePath, bitriseExportedFilePath); err != nil {
+			failf("Failed to export %s, error: %s", bitriseExportedFilePath, err)
+		}
+
+		fmt.Println()
+		log.Donef("The app path is now available in the Environment Variable: %s (value: %s)", bitriseExportedFilePath, filePath)
+	} else {
+		// export using exportOptions
+		log.Printf("Export using exportOptions...")
+		fmt.Println()
+
+		exportTmpDir, err := pathutil.NormalizedOSTempDirPath("__export__")
+		if err != nil {
+			failf("Failed to create export tmp dir, error: %s", err)
+		}
+
+		exportCmd := xcodebuild.NewExportCommand()
+		exportCmd.SetArchivePath(archivePath)
+		exportCmd.SetExportDir(exportTmpDir)
+
+		exportMethod, err := exportoptions.ParseMethod(configs.ExportMethod)
+		if err != nil {
+			failf("Failed to parse export method, error: %s", err)
+		}
+
+		var exportOpts exportoptions.ExportOptions
+		if exportMethod == exportoptions.MethodAppStore {
+			exportOpts = exportoptions.NewAppStoreOptions()
+		} else {
+			exportOpts = exportoptions.NewNonAppStoreOptions(exportMethod)
+		}
+
+		log.Printf("generated export options content:")
+		fmt.Println()
+		fmt.Println(exportOpts.String())
+
+		if err = exportOpts.WriteToFile(exportOptionsPath); err != nil {
+			failf("Failed to write export options to file, error: %s", err)
+		}
+
+		exportCmd.SetExportOptionsPlist(exportOptionsPath)
+
+		if configs.OutputTool == "xcpretty" {
+			xcprettyCmd := xcpretty.New(exportCmd)
+
+			log.Donef("$ %s", xcprettyCmd.PrintableCmd())
+			fmt.Println()
+
+			if rawXcodebuildOut, err := xcprettyCmd.Run(); err != nil {
+				if err := ExportOutputFileContent(rawXcodebuildOut, rawXcodebuildOutputLogPath, bitriseXcodeRawResultTextEnvKey); err != nil {
+					log.Warnf("Failed to export %s, error: %s", bitriseXcodeRawResultTextEnvKey, err)
+				} else {
+					log.Warnf(`If you can't find the reason of the error in the log, please check the raw-xcodebuild-output.log
+The log file is stored in $BITRISE_DEPLOY_DIR, and its full path
+is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable`)
+				}
+
+				failf("Archive failed, error: %s", err)
+			}
+		} else {
+			log.Donef("$ %s", exportCmd.PrintableCmd())
+			fmt.Println()
+
+			if err := exportCmd.Run(); err != nil {
+				failf("Export failed, error: %s", err)
+			}
+		}
+
+		// find exported app
+		pattern := filepath.Join(exportTmpDir, "*."+exportFormat)
+		apps, err := filepath.Glob(pattern)
+		if err != nil {
+			failf("Failed to find app, with pattern: %s, error: %s", pattern, err)
+		}
+
+		if len(apps) > 0 {
+			if exportFormat == "pkg" {
+				if err := ExportOutputFile(apps[0], filePath, bitriseExportedFilePath); err != nil {
+					failf("Failed to export %s, error: %s", bitriseExportedFilePath, err)
+				}
+			} else if exportFormat == "app" {
+				if err := ExportOutputDir(apps[0], filePath, bitriseExportedFilePath); err != nil {
+					failf("Failed to export %s, error: %s", bitriseExportedFilePath, err)
+				}
+			}
+
+			fmt.Println()
+			log.Donef("The app path is now available in the Environment Variable: %s (value: %s)", bitriseExportedFilePath, filePath)
+		}
 	}
 
-	exportCmd.SetExportOptionsPlist(exportOptionsPlistString)
-
-	log.Donef("$ %s", exportCmd.PrintableCmd())
+	// Export .dSYMs
 	fmt.Println()
 
-	if err := exportCmd.Run(); err != nil {
-		failf("Export failed, error: %s", err)
+	appDSYM, frameworkDSYMs, err := xcarchive.FindDSYMs(archivePath)
+	if err != nil {
+		failf("Failed to export dsyms, error: %s", err)
 	}
+
+	dsymDir, err := pathutil.NormalizedOSTempDirPath("__dsyms__")
+	if err != nil {
+		failf("Failed to create tmp dir, error: %s", err)
+	}
+
+	if err := command.CopyDir(appDSYM, dsymDir, false); err != nil {
+		failf("Failed to copy (%s) -> (%s), error: %s", appDSYM, dsymDir, err)
+	}
+
+	if configs.IsExportAllDsyms == "yes" {
+		for _, dsym := range frameworkDSYMs {
+			if err := command.CopyDir(dsym, dsymDir, false); err != nil {
+				failf("Failed to copy (%s) -> (%s), error: %s", dsym, dsymDir, err)
+			}
+		}
+	}
+
+	if err := ExportOutputDirAsZip(dsymDir, dsymZipPath, bitriseDSYMDirPthEnvKey); err != nil {
+		failf("Failed to export %s, error: %s", bitriseDSYMDirPthEnvKey, err)
+	}
+
+	log.Donef("The dSYM dir path is now available in the Environment Variable: %s (value: %s)", bitriseDSYMDirPthEnvKey, dsymZipPath)
+
 }
