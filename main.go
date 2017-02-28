@@ -1,11 +1,9 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
 	"path/filepath"
@@ -25,6 +23,7 @@ const (
 	bitriseXcodeRawResultTextEnvKey = "BITRISE_XCODE_RAW_RESULT_TEXT_PATH"
 	bitriseExportedFilePath         = "BITRISE_EXPORTED_FILE_PATH"
 	bitriseDSYMDirPthEnvKey         = "BITRISE_DSYM_PATH"
+	bitriseXCArchivePthEnvKey       = "BITRISE_XCARCHIVE_PATH"
 )
 
 // ConfigsModel ...
@@ -59,24 +58,6 @@ func (configs ConfigsModel) print() {
 	log.Printf("- IsExportXcarchiveZip: %s", configs.IsExportXcarchiveZip)
 	log.Printf("- IsExportAllDsyms: %s", configs.IsExportAllDsyms)
 }
-
-/*
-# Validate parameters
-echo_info "Configs:"
-echo_details "* workdir: ${workdir}"
->echo_details "* project_path: ${project_path}"
->echo_details "* scheme: ${scheme}"
->echo_details "* configuration: ${configuration}"
->echo_details "* output_dir: ${output_dir}"
->echo_details "* force_code_sign_identity: ${force_code_sign_identity}"
->echo_details "* force_provisioning_profile: ${force_provisioning_profile}"
->echo_details "* export_options_path: ${export_options_path}"
->echo_details "* export_method: ${export_method}"
->echo_details "* is_clean_build: ${is_clean_build}"
->echo_details "* output_tool: ${output_tool}"
->echo_details "* is_export_xcarchive_zip: ${is_export_xcarchive_zip}"
->echo_details "* is_export_all_dsyms: $is_export_all_dsyms"
-*/
 
 func createConfigsModelFromEnvs() ConfigsModel {
 	return ConfigsModel{
@@ -214,24 +195,6 @@ func ExportOutputFileContent(content, destinationPth, envKey string) error {
 	return ExportOutputFile(destinationPth, destinationPth, envKey)
 }
 
-func findIDEDistrubutionLogsPath(output string) (string, error) {
-	pattern := `IDEDistribution: -\[IDEDistributionLogging _createLoggingBundleAtPath:\]: Created bundle at path '(?P<log_path>.*)'`
-	re := regexp.MustCompile(pattern)
-
-	scanner := bufio.NewScanner(strings.NewReader(output))
-	for scanner.Scan() {
-		line := scanner.Text()
-		if match := re.FindStringSubmatch(line); len(match) == 2 {
-			return match[1], nil
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return "", err
-	}
-
-	return "", nil
-}
-
 func zip(sourceDir, destinationZipPth string) error {
 	parentDir := filepath.Dir(sourceDir)
 	dirName := filepath.Base(sourceDir)
@@ -333,10 +296,12 @@ func main() {
 	if err != nil {
 		failf("Failed to create archive tmp dir, error: %s", err)
 	}
+
 	archivePath := filepath.Join(archiveTempDir, fmt.Sprintf("%s.xcarchive", configs.Scheme))
 	log.Printf("- archivePath: %s", archivePath)
 
 	exportOptionsPath := filepath.Join(configs.OutputDir, "export_options.plist")
+	log.Printf("- exportOptionsPath: %s", exportOptionsPath)
 
 	filePath := fmt.Sprintf("%s/%s.%s", configs.OutputDir, configs.Scheme, exportFormat)
 	log.Printf("- filePath: %s", filePath)
@@ -345,20 +310,23 @@ func main() {
 	log.Printf("- dsymZipPath: %s", dsymZipPath)
 
 	rawXcodebuildOutputLogPath := filepath.Join(configs.OutputDir, "raw-xcodebuild-output.log")
-	//ideDistributionLogsZipPath := filepath.Join(configs.OutputDir, "xcodebuild.xcdistributionlogs.zip")
-	//archiveZipPath := filepath.Join(configs.OutputDir, configs.Scheme+".xcarchive.zip")
+	log.Printf("- rawXcodebuildOutputLogPath: %s", rawXcodebuildOutputLogPath)
+
+	archiveZipPath := filepath.Join(configs.OutputDir, configs.Scheme+".xcarchive.zip")
+	log.Printf("- archiveZipPath: %s", archiveZipPath)
+
 	fmt.Println()
 
 	// clean-up
 	filesToCleanup := []string{
+		archiveTempDir,
 		archivePath,
 		filePath,
 		dsymZipPath,
 		rawXcodebuildOutputLogPath,
-		//ideDistributionLogsZipPath,
-		//archiveZipPath,
+		archiveZipPath,
+		exportOptionsPath,
 	}
-
 	for _, pth := range filesToCleanup {
 		if exist, err := pathutil.IsPathExists(pth); err != nil {
 			failf("Failed to check if path (%s) exist, error: %s", pth, err)
@@ -563,7 +531,9 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable`)
 		}
 	}
 
-	// Export .dSYMs
+	// Export .dSYM files
+	fmt.Println()
+	log.Infof("Exporting dSYM files ...")
 	fmt.Println()
 
 	appDSYM, frameworkDSYMs, err := xcarchive.FindDSYMs(archivePath)
@@ -594,4 +564,16 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable`)
 
 	log.Donef("The dSYM dir path is now available in the Environment Variable: %s (value: %s)", bitriseDSYMDirPthEnvKey, dsymZipPath)
 
+	// Exporting xcarchive
+	fmt.Println()
+	log.Infof("Exporting xcarchive ...")
+	fmt.Println()
+
+	if configs.IsExportXcarchiveZip == "yes" {
+		if err := ExportOutputDirAsZip(archivePath, archiveZipPath, bitriseXCArchivePthEnvKey); err != nil {
+			failf("Failed to export %s, error: %s", bitriseXCArchivePthEnvKey, err)
+		}
+
+		log.Donef("The xcarchive zip path is now available in the Environment Variable: %s (value: %s)", bitriseXCArchivePthEnvKey, archiveZipPath)
+	}
 }
