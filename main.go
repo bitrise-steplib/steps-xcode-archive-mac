@@ -24,6 +24,7 @@ const (
 	bitriseExportedFilePath         = "BITRISE_EXPORTED_FILE_PATH"
 	bitriseDSYMDirPthEnvKey         = "BITRISE_DSYM_PATH"
 	bitriseXCArchivePthEnvKey       = "BITRISE_XCARCHIVE_PATH"
+	bitriseAppPthEnvKey             = "BITRISE_APP_PATH"
 )
 
 // ConfigsModel ...
@@ -439,8 +440,11 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable`)
 				failf("Export failed, error: %s", err)
 			}
 		}
+		if err := ExportEnvironmentWithEnvman(bitriseAppPthEnvKey, filePath); err != nil {
+			failf("Failed to export %s, error: %s", bitriseAppPthEnvKey, err)
+		}
 
-		if err := ExportOutputDir(filePath, filePath, bitriseExportedFilePath); err != nil {
+		if err := ExportOutputDirAsZip(filePath, filePath+".zip", bitriseExportedFilePath); err != nil {
 			failf("Failed to export %s, error: %s", bitriseExportedFilePath, err)
 		}
 
@@ -520,8 +524,12 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable`)
 				if err := ExportOutputFile(apps[0], filePath, bitriseExportedFilePath); err != nil {
 					failf("Failed to export %s, error: %s", bitriseExportedFilePath, err)
 				}
-			} else if exportFormat == "app" {
-				if err := ExportOutputDir(apps[0], filePath, bitriseExportedFilePath); err != nil {
+			} else {
+				if err := ExportEnvironmentWithEnvman(bitriseAppPthEnvKey, filePath); err != nil {
+					failf("Failed to export %s, error: %s", bitriseAppPthEnvKey, err)
+				}
+				filePath = filePath + ".zip"
+				if err := ExportOutputDirAsZip(apps[0], filePath, bitriseExportedFilePath); err != nil {
 					failf("Failed to export %s, error: %s", bitriseExportedFilePath, err)
 				}
 			}

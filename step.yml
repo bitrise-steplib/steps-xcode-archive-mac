@@ -173,7 +173,10 @@ inputs:
 outputs:
   - BITRISE_EXPORTED_FILE_PATH:
     opts:
-      title: The created .app or .pkg file's path
+      title: The created .app.zip or .pkg file's path
+  - BITRISE_APP_PATH:
+    opts:
+      title: The created .app path
   - BITRISE_DSYM_PATH:
     opts:
       title: The created .dSYM.zip file's path
