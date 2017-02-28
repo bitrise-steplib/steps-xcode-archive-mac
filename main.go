@@ -449,7 +449,7 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable`)
 		}
 
 		fmt.Println()
-		log.Donef("The app path is now available in the Environment Variable: %s (value: %s)", bitriseExportedFilePath, filePath)
+		log.Donef("The app path is now available in the Environment Variable: %s (value: %s)", bitriseExportedFilePath, filePath+".zip")
 	} else {
 		// export using exportOptions
 		log.Printf("Export using exportOptions...")
