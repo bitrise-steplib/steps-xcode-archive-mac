@@ -67,7 +67,6 @@ workflows:
         - is_clean_build: "no"
         - workdir: $PROJECT_WORKDIR
         - output_tool: xcpretty
-        - export_method: none
         - force_provisioning_profile: $BITRISE_PROVISIONING_PROFILE_ID
         - force_code_sign_identity: $BITRISE_CODE_SIGN_IDENTITY
         - is_export_all_dsyms: "yes"

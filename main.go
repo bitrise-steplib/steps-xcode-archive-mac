@@ -29,65 +29,111 @@ const (
 
 // ConfigsModel ...
 type ConfigsModel struct {
-	ProjectPath              string
-	Scheme                   string
-	OutputTool               string
-	IsCleanBuild             string
-	Configuration            string
-	OutputDir                string
-	ForceCodeSignIdentity    string
-	ForceProvisioningProfile string
-	ExportOptionsPath        string
-	ExportMethod             string
-	IsExportXcarchiveZip     string
-	IsExportAllDsyms         string
-}
+	ExportMethod string
 
-func (configs ConfigsModel) print() {
-	fmt.Println()
-	log.Infof("Configs:")
-	log.Printf("- ProjectPath: %s", configs.ProjectPath)
-	log.Printf("- Scheme: %s", configs.Scheme)
-	log.Printf("- OutputTool: %s", configs.OutputTool)
-	log.Printf("- IsCleanBuild: %s", configs.IsCleanBuild)
-	log.Printf("- Configuration: %s", configs.Configuration)
-	log.Printf("- OutputDir: %s", configs.OutputDir)
-	log.Printf("- ForceCodeSignIdentity: %s", configs.ForceCodeSignIdentity)
-	log.Printf("- ForceProvisioningProfile: %s", configs.ForceProvisioningProfile)
-	log.Printf("- ExportOptionsPath: %s", configs.ExportOptionsPath)
-	log.Printf("- ExportMethod: %s", configs.ExportMethod)
-	log.Printf("- IsExportXcarchiveZip: %s", configs.IsExportXcarchiveZip)
-	log.Printf("- IsExportAllDsyms: %s", configs.IsExportAllDsyms)
+	ForceTeamID                       string
+	ForceProvisioningProfileSpecifier string
+	ForceProvisioningProfile          string
+	ForceCodeSignIdentity             string
+	CustomExportOptionsPlistContent   string
+
+	OutputTool    string
+	WorkDir       string
+	ProjectPath   string
+	Scheme        string
+	Configuration string
+	ArtifactName  string
+	OutputDir     string
+	IsCleanBuild  string
+
+	IsExportXcarchiveZip string
+	IsExportAllDsyms     string
+
+	IsForceCodeSign   string
+	ExportOptionsPath string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
 	return ConfigsModel{
-		ProjectPath:              os.Getenv("project_path"),
-		Scheme:                   os.Getenv("scheme"),
-		OutputTool:               os.Getenv("output_tool"),
-		IsCleanBuild:             os.Getenv("is_clean_build"),
-		Configuration:            os.Getenv("configuration"),
-		OutputDir:                os.Getenv("output_dir"),
-		ForceCodeSignIdentity:    os.Getenv("force_code_sign_identity"),
-		ForceProvisioningProfile: os.Getenv("force_provisioning_profile"),
-		ExportOptionsPath:        os.Getenv("export_options_path"),
-		ExportMethod:             os.Getenv("export_method"),
-		IsExportXcarchiveZip:     os.Getenv("is_export_xcarchive_zip"),
-		IsExportAllDsyms:         os.Getenv("is_export_all_dsyms"),
+		ExportMethod: os.Getenv("export_method"),
+
+		ForceTeamID:                       os.Getenv("force_team_id"),
+		ForceProvisioningProfileSpecifier: os.Getenv("force_provisioning_profile_specifier"),
+		ForceProvisioningProfile:          os.Getenv("force_provisioning_profile"),
+		ForceCodeSignIdentity:             os.Getenv("force_code_sign_identity"),
+		CustomExportOptionsPlistContent:   os.Getenv("custom_export_options_plist_content"),
+
+		OutputTool:    os.Getenv("output_tool"),
+		WorkDir:       os.Getenv("workdir"),
+		ProjectPath:   os.Getenv("project_path"),
+		Scheme:        os.Getenv("scheme"),
+		Configuration: os.Getenv("configuration"),
+		OutputDir:     os.Getenv("output_dir"),
+		ArtifactName:  os.Getenv("artifact_name"),
+		IsCleanBuild:  os.Getenv("is_clean_build"),
+
+		IsExportXcarchiveZip: os.Getenv("is_export_xcarchive_zip"),
+		IsExportAllDsyms:     os.Getenv("is_export_all_dsyms"),
+
+		IsForceCodeSign:   os.Getenv("is_force_code_sign"),
+		ExportOptionsPath: os.Getenv("export_options_path"),
 	}
+}
+
+func (configs ConfigsModel) print() {
+	fmt.Println()
+
+	log.Infof("app/pkg export configs:")
+	useCustomExportOptions := (configs.CustomExportOptionsPlistContent != "")
+	if useCustomExportOptions {
+		fmt.Println()
+		log.Warnf("Ignoring the following options because CustomExportOptionsPlistContent provided:")
+	}
+
+	log.Printf("- ExportMethod: %s", configs.ExportMethod)
+
+	if useCustomExportOptions {
+		log.Warnf("----------")
+	}
+
+	log.Printf("- ForceTeamID: %s", configs.ForceTeamID)
+	log.Printf("- ForceProvisioningProfileSpecifier: %s", configs.ForceProvisioningProfileSpecifier)
+	log.Printf("- ForceProvisioningProfile: %s", configs.ForceProvisioningProfile)
+	log.Printf("- ForceCodeSignIdentity: %s", configs.ForceCodeSignIdentity)
+	log.Printf("- CustomExportOptionsPlistContent:")
+	if configs.CustomExportOptionsPlistContent != "" {
+		log.Printf(configs.CustomExportOptionsPlistContent)
+	}
+	log.Infof("xcodebuild configs:")
+	log.Printf("- WorkDir: %s", configs.WorkDir)
+	log.Printf("- ProjectPath: %s", configs.ProjectPath)
+	log.Printf("- Scheme: %s", configs.Scheme)
+	log.Printf("- Configuration: %s", configs.Configuration)
+	log.Printf("- IsCleanBuild: %s", configs.IsCleanBuild)
+
+	log.Infof("step output configs:")
+	log.Printf("- OutputTool: %s", configs.OutputTool)
+	log.Printf("- OutputDir: %s", configs.OutputDir)
+	log.Printf("- ArtifactName: %s", configs.ArtifactName)
+	log.Printf("- IsExportXcarchiveZip: %s", configs.IsExportXcarchiveZip)
+	log.Printf("- IsExportAllDsyms: %s", configs.IsExportAllDsyms)
+
+	log.Infof("DEPRECATED configs:")
+	log.Printf("- IsForceCodeSign: %s", configs.IsForceCodeSign)
+	log.Printf("- ExportOptionsPath: %s", configs.ExportOptionsPath)
 }
 
 //--------------------
 // Functions
 //--------------------
-func validateRequiredInput(value, key string) error {
+func validateRequiredInput(key, value string) error {
 	if value == "" {
 		return fmt.Errorf("Missing required input: %s", key)
 	}
 	return nil
 }
 
-func validateRequiredInputWithOptions(value, key string, options []string) error {
+func validateRequiredInputWithOptions(key, value string, options []string) error {
 	if err := validateRequiredInput(key, value); err != nil {
 		return err
 	}
@@ -109,7 +155,7 @@ func validateRequiredInputWithOptions(value, key string, options []string) error
 
 func (configs ConfigsModel) validate() error {
 	// required
-	if err := validateRequiredInput(configs.ProjectPath, "project_path"); err != nil {
+	if err := validateRequiredInput("project_path", configs.ProjectPath); err != nil {
 		return err
 	}
 	if exists, err := pathutil.IsDirExists(configs.ProjectPath); err != nil {
@@ -118,7 +164,7 @@ func (configs ConfigsModel) validate() error {
 		return errors.New("ProjectPath directory does not exists: %s")
 	}
 
-	if err := validateRequiredInput(configs.OutputDir, "output_dir"); err != nil {
+	if err := validateRequiredInput("output_dir", configs.OutputDir); err != nil {
 		return err
 	}
 	if exists, err := pathutil.IsDirExists(configs.OutputDir); err != nil {
@@ -127,34 +173,44 @@ func (configs ConfigsModel) validate() error {
 		return errors.New("OutputDir directory does not exists: %s")
 	}
 
-	if err := validateRequiredInput(configs.Scheme, "scheme"); err != nil {
+	if err := validateRequiredInput("scheme", configs.Scheme); err != nil {
 		return err
 	}
 
-	if err := validateRequiredInputWithOptions(configs.OutputTool, "output_tool", []string{"xcpretty", "xcodebuild"}); err != nil {
+	if err := validateRequiredInputWithOptions("output_tool", configs.OutputTool, []string{"xcpretty", "xcodebuild"}); err != nil {
 		return err
 	}
 
-	if err := validateRequiredInputWithOptions(configs.IsCleanBuild, "is_clean_build", []string{"yes", "no"}); err != nil {
+	if err := validateRequiredInputWithOptions("is_clean_build", configs.IsCleanBuild, []string{"yes", "no"}); err != nil {
 		return err
 	}
 
-	if err := validateRequiredInputWithOptions(configs.IsExportXcarchiveZip, "is_export_xcarchive_zip", []string{"yes", "no"}); err != nil {
+	if err := validateRequiredInputWithOptions("is_export_xcarchive_zip", configs.IsExportXcarchiveZip, []string{"yes", "no"}); err != nil {
 		return err
 	}
 
-	if err := validateRequiredInputWithOptions(configs.IsExportAllDsyms, "is_export_all_dsyms", []string{"yes", "no"}); err != nil {
+	if err := validateRequiredInputWithOptions("is_export_all_dsyms", configs.IsExportAllDsyms, []string{"yes", "no"}); err != nil {
 		return err
 	}
 
-	if err := validateRequiredInputWithOptions(configs.ExportMethod, "export_method", []string{"none", "app-store", "development", "developer-id"}); err != nil {
+	if err := validateRequiredInputWithOptions("export_method", configs.ExportMethod, []string{"none", "app-store", "development", "developer-id"}); err != nil {
 		return err
 	}
 
-	if os.Getenv("is_force_code_sign") != "no" {
+	if err := validateRequiredInput("artifact_name", configs.ArtifactName); err != nil {
+		return err
+	}
+
+	if configs.ExportOptionsPath != "" {
 		fmt.Println()
-		log.Warnf("is_force_code_sign is deprecated!")
-		log.Warnf("Use `force_code_sign_identity` and `force_provisioning_profile` instead.")
+		log.Warnf("ExportOptionsPath is deprecated!")
+		log.Warnf("Use `custom_export_options_plist_content` instead.")
+	}
+
+	if configs.IsForceCodeSign != "no" {
+		fmt.Println()
+		log.Warnf("IsForceCodeSign is deprecated!")
+		log.Warnf("Use `force_code_sign_identity` and `force_provisioning_profile_specifier/force_provisioning_profile` instead.")
 	}
 
 	return nil
@@ -248,8 +304,53 @@ func main() {
 		failf("Issue with input: %s", err)
 	}
 
-	fmt.Println()
-	log.Infof("Other Configs:")
+	log.Infof("step determined configs:")
+
+	// Detect Xcode major version
+	xcodebuildVersion, err := utility.GetXcodeVersion()
+	if err != nil {
+		failf("Failed to get the version of xcodebuild! Error: %s", err)
+	}
+	log.Printf("- xcodebuild_version: %s (%s)", xcodebuildVersion.Version, xcodebuildVersion.BuildVersion)
+	if configs.ExportOptionsPath != "" && xcodebuildVersion.MajorVersion == 6 {
+		log.Warnf("Xcode major version: 6, export_options_path only used if xcode major version > 6")
+		configs.ExportOptionsPath = ""
+	}
+
+	// Detect xcpretty version
+	if configs.OutputTool == "xcpretty" {
+		xcprettyVersion, err := GetXcprettyVersion()
+		if err != nil {
+			failf("Failed to get the xcpretty version! Error: %s", err)
+		} else {
+			log.Printf("- xcpretty_version: %s", xcprettyVersion)
+		}
+	}
+
+	// Validation CustomExportOptionsPlistContent
+	if configs.CustomExportOptionsPlistContent != "" &&
+		xcodebuildVersion.MajorVersion < 7 {
+		log.Warnf("CustomExportOptionsPlistContent is set, but CustomExportOptionsPlistContent only used if xcodeMajorVersion > 6")
+		configs.CustomExportOptionsPlistContent = ""
+	}
+
+	if configs.ForceProvisioningProfileSpecifier != "" &&
+		xcodebuildVersion.MajorVersion < 8 {
+		log.Warnf("ForceProvisioningProfileSpecifier is set, but ForceProvisioningProfileSpecifier only used if xcodeMajorVersion > 7")
+		configs.ForceProvisioningProfileSpecifier = ""
+	}
+
+	if configs.ForceTeamID == "" &&
+		xcodebuildVersion.MajorVersion < 8 {
+		log.Warnf("ForceTeamID is set, but ForceTeamID only used if xcodeMajorVersion > 7")
+		configs.ForceTeamID = ""
+	}
+
+	if configs.ForceProvisioningProfileSpecifier != "" &&
+		configs.ForceProvisioningProfile != "" {
+		log.Warnf("both ForceProvisioningProfileSpecifier and ForceProvisioningProfile are set, using ForceProvisioningProfileSpecifier")
+		configs.ForceProvisioningProfile = ""
+	}
 
 	// Project-or-Workspace flag
 	action := ""
@@ -263,28 +364,6 @@ func main() {
 
 	log.Printf("- action: %s", action)
 
-	// Output tools versions
-	xcodebuildVersion, err := utility.GetXcodeVersion()
-	if err != nil {
-		failf("Failed to get the version of xcodebuild! Error: %s", err)
-	}
-
-	log.Printf("- xcodebuild_version: %s (%s)", xcodebuildVersion.Version, xcodebuildVersion.BuildVersion)
-	if configs.ExportOptionsPath != "" && xcodebuildVersion.MajorVersion == 6 {
-		log.Warnf("Xcode major version: 6, export_options_path only used if xcode major version > 6")
-		configs.ExportOptionsPath = ""
-	}
-
-	// xcpretty version
-	if configs.OutputTool == "xcpretty" {
-		xcprettyVersion, err := GetXcprettyVersion()
-		if err != nil {
-			failf("Failed to get the xcpretty version! Error: %s", err)
-		} else {
-			log.Printf("- xcpretty_version: %s", xcprettyVersion)
-		}
-	}
-
 	// export format
 	exportFormat := "app"
 	if configs.ExportMethod == "app-store" {
@@ -292,42 +371,58 @@ func main() {
 	}
 	log.Printf("- export_format: %s", exportFormat)
 
+	fmt.Println()
+
+	// abs out dir pth
+	absOutputDir, err := pathutil.AbsPath(configs.OutputDir)
+	if err != nil {
+		failf("Failed to expand OutputDir (%s), error: %s", configs.OutputDir, err)
+	}
+	configs.OutputDir = absOutputDir
+
+	if exist, err := pathutil.IsPathExists(configs.OutputDir); err != nil {
+		failf("Failed to check if OutputDir exist, error: %s", err)
+	} else if !exist {
+		if err := os.MkdirAll(configs.OutputDir, 0777); err != nil {
+			failf("Failed to create OutputDir (%s), error: %s", configs.OutputDir, err)
+		}
+	}
+
 	// output files
 	archiveTempDir, err := pathutil.NormalizedOSTempDirPath("bitrise-xcarchive")
 	if err != nil {
 		failf("Failed to create archive tmp dir, error: %s", err)
 	}
 
-	archivePath := filepath.Join(archiveTempDir, fmt.Sprintf("%s.xcarchive", configs.Scheme))
+	archivePath := filepath.Join(archiveTempDir, configs.ArtifactName+".xcarchive")
 	log.Printf("- archivePath: %s", archivePath)
+
+	archiveZipPath := filepath.Join(configs.OutputDir, configs.ArtifactName+".xcarchive.zip")
+	log.Printf("- archiveZipPath: %s", archiveZipPath)
 
 	exportOptionsPath := filepath.Join(configs.OutputDir, "export_options.plist")
 	log.Printf("- exportOptionsPath: %s", exportOptionsPath)
 
-	filePath := fmt.Sprintf("%s/%s.%s", configs.OutputDir, configs.Scheme, exportFormat)
+	filePath := filepath.Join(configs.OutputDir, configs.ArtifactName+"."+exportFormat)
 	log.Printf("- filePath: %s", filePath)
 
-	dsymZipPath := fmt.Sprintf("%s/%s.dSYM.zip", configs.OutputDir, configs.Scheme)
+	dsymZipPath := filepath.Join(configs.OutputDir, configs.ArtifactName+".dSYM.zip")
 	log.Printf("- dsymZipPath: %s", dsymZipPath)
 
 	rawXcodebuildOutputLogPath := filepath.Join(configs.OutputDir, "raw-xcodebuild-output.log")
 	log.Printf("- rawXcodebuildOutputLogPath: %s", rawXcodebuildOutputLogPath)
 
-	archiveZipPath := filepath.Join(configs.OutputDir, configs.Scheme+".xcarchive.zip")
-	log.Printf("- archiveZipPath: %s", archiveZipPath)
-
 	fmt.Println()
 
 	// clean-up
 	filesToCleanup := []string{
-		archiveTempDir,
-		archivePath,
 		filePath,
 		dsymZipPath,
 		rawXcodebuildOutputLogPath,
 		archiveZipPath,
 		exportOptionsPath,
 	}
+
 	for _, pth := range filesToCleanup {
 		if exist, err := pathutil.IsPathExists(pth); err != nil {
 			failf("Failed to check if path (%s) exist, error: %s", pth, err)
@@ -338,14 +433,33 @@ func main() {
 		}
 	}
 
-	// Create archive
+	//
+	// Create the Archive with Xcode Command Line tools
 	log.Infof("Create archive ...")
 	fmt.Println()
 
-	archiveCmd := xcodebuild.NewArchiveCommand(configs.ProjectPath, (action == "-workspace"))
+	isWorkspace := false
+	ext := filepath.Ext(configs.ProjectPath)
+	if ext == ".xcodeproj" {
+		isWorkspace = false
+	} else if ext == ".xcworkspace" {
+		isWorkspace = true
+	} else {
+		failf("Project file extension should be .xcodeproj or .xcworkspace, but got: %s", ext)
+	}
+
+	archiveCmd := xcodebuild.NewArchiveCommand(configs.ProjectPath, isWorkspace)
 	archiveCmd.SetScheme(configs.Scheme)
 	archiveCmd.SetConfiguration(configs.Configuration)
 
+	if configs.ForceTeamID != "" {
+		log.Printf("Forcing Development Team: %s", configs.ForceTeamID)
+		archiveCmd.SetForceDevelopmentTeam(configs.ForceTeamID)
+	}
+	if configs.ForceProvisioningProfileSpecifier != "" {
+		log.Printf("Forcing Provisioning Profile Specifier: %s", configs.ForceProvisioningProfileSpecifier)
+		archiveCmd.SetForceProvisioningProfileSpecifier(configs.ForceProvisioningProfileSpecifier)
+	}
 	if configs.ForceProvisioningProfile != "" {
 		log.Printf("Forcing Provisioning Profile: %s", configs.ForceProvisioningProfile)
 		archiveCmd.SetForceProvisioningProfile(configs.ForceProvisioningProfile)
@@ -354,6 +468,7 @@ func main() {
 		log.Printf("Forcing Code Signing Identity: %s", configs.ForceCodeSignIdentity)
 		archiveCmd.SetForceCodeSignIdentity(configs.ForceCodeSignIdentity)
 	}
+
 	if configs.IsCleanBuild == "yes" {
 		archiveCmd.SetCustomBuildAction("clean")
 	}
@@ -363,7 +478,7 @@ func main() {
 	if configs.OutputTool == "xcpretty" {
 		xcprettyCmd := xcpretty.New(archiveCmd)
 
-		log.Donef("$ %s", xcprettyCmd.PrintableCmd())
+		log.Doneft("$ %s", xcprettyCmd.PrintableCmd())
 		fmt.Println()
 
 		if rawXcodebuildOut, err := xcprettyCmd.Run(); err != nil {
@@ -378,7 +493,7 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable`)
 			failf("Archive failed, error: %s", err)
 		}
 	} else {
-		log.Donef("$ %s", archiveCmd.PrintableCmd())
+		log.Doneft("$ %s", archiveCmd.PrintableCmd())
 		fmt.Println()
 
 		if err := archiveCmd.Run(); err != nil {
@@ -391,6 +506,19 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable`)
 		failf("Failed to check if archive exist, error: %s", err)
 	} else if !exist {
 		failf("No archive generated at: %s", archivePath)
+	}
+
+	// Exporting xcarchive
+	fmt.Println()
+	log.Infof("Exporting xcarchive ...")
+	fmt.Println()
+
+	if configs.IsExportXcarchiveZip == "yes" {
+		if err := ExportOutputDirAsZip(archivePath, archiveZipPath, bitriseXCArchivePthEnvKey); err != nil {
+			failf("Failed to export %s, error: %s", bitriseXCArchivePthEnvKey, err)
+		}
+
+		log.Donef("The xcarchive zip path is now available in the Environment Variable: %s (value: %s)", bitriseXCArchivePthEnvKey, archiveZipPath)
 	}
 
 	fmt.Println()
@@ -407,49 +535,34 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable`)
 
 	// Legacy
 	if configs.ExportMethod == "none" {
-		log.Printf("Using legacy export")
+		log.Printf("Export a copy of the application without re-signing...")
 		fmt.Println()
 
-		exportLegacyCmd := xcodebuild.NewLegacyExportCommand()
-		exportLegacyCmd.SetArchivePath(archivePath)
-		exportLegacyCmd.SetExportFormat(exportFormat)
-		exportLegacyCmd.SetExportPath(filePath)
-
-		if configs.OutputTool == "xcpretty" {
-			xcprettyCmd := xcpretty.New(exportLegacyCmd)
-
-			log.Donef("$ %s", xcprettyCmd.PrintableCmd())
-			fmt.Println()
-
-			if rawXcodebuildOut, err := xcprettyCmd.Run(); err != nil {
-				if err := ExportOutputFileContent(rawXcodebuildOut, rawXcodebuildOutputLogPath, bitriseXcodeRawResultTextEnvKey); err != nil {
-					log.Warnf("Failed to export %s, error: %s", bitriseXcodeRawResultTextEnvKey, err)
-				} else {
-					log.Warnf(`If you can't find the reason of the error in the log, please check the raw-xcodebuild-output.log
-The log file is stored in $BITRISE_DEPLOY_DIR, and its full path
-is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable`)
-				}
-
-				failf("Archive failed, error: %s", err)
-			}
-		} else {
-			log.Donef("$ %s", exportLegacyCmd.PrintableCmd())
-			fmt.Println()
-
-			if err := exportLegacyCmd.Run(); err != nil {
-				failf("Export failed, error: %s", err)
-			}
+		embeddedAppPattern := filepath.Join(archivePath, "Products", "Applications", "*.app")
+		matches, err := filepath.Glob(embeddedAppPattern)
+		if err != nil {
+			failf("Failed to find embedded app with pattern: %s, error: %s", embeddedAppPattern, err)
 		}
-		if err := ExportEnvironmentWithEnvman(bitriseAppPthEnvKey, filePath); err != nil {
+
+		if len(matches) == 0 {
+			failf("No embedded app found with pattern: %s", embeddedAppPattern)
+		} else if len(matches) > 1 {
+			failf("Multiple embedded app found with pattern: %s", embeddedAppPattern)
+		}
+
+		embeddedAppPath := matches[0]
+		appPath := filepath.Join(configs.OutputDir, configs.ArtifactName+".app")
+
+		if err := ExportOutputFile(embeddedAppPath, appPath, bitriseAppPthEnvKey); err != nil {
 			failf("Failed to export %s, error: %s", bitriseAppPthEnvKey, err)
 		}
 
-		if err := ExportOutputDirAsZip(filePath, filePath+".zip", bitriseExportedFilePath); err != nil {
+		filePath = filePath + ".zip"
+		if err := ExportOutputDirAsZip(embeddedAppPath, filePath, bitriseExportedFilePath); err != nil {
 			failf("Failed to export %s, error: %s", bitriseExportedFilePath, err)
 		}
 
-		fmt.Println()
-		log.Donef("The app path is now available in the Environment Variable: %s (value: %s)", bitriseExportedFilePath, filePath+".zip")
+		log.Donef("The app path is now available in the Environment Variable: %s (value: %s)", bitriseExportedFilePath, filePath)
 	} else {
 		// export using exportOptions
 		log.Printf("Export using exportOptions...")
@@ -571,17 +684,4 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable`)
 	}
 
 	log.Donef("The dSYM dir path is now available in the Environment Variable: %s (value: %s)", bitriseDSYMDirPthEnvKey, dsymZipPath)
-
-	// Exporting xcarchive
-	fmt.Println()
-	log.Infof("Exporting xcarchive ...")
-	fmt.Println()
-
-	if configs.IsExportXcarchiveZip == "yes" {
-		if err := ExportOutputDirAsZip(archivePath, archiveZipPath, bitriseXCArchivePthEnvKey); err != nil {
-			failf("Failed to export %s, error: %s", bitriseXCArchivePthEnvKey, err)
-		}
-
-		log.Donef("The xcarchive zip path is now available in the Environment Variable: %s (value: %s)", bitriseXCArchivePthEnvKey, archiveZipPath)
-	}
 }
