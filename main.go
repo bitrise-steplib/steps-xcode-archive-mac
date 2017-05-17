@@ -4,10 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
-
-	"path/filepath"
 
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
@@ -128,46 +127,41 @@ func (configs ConfigsModel) print() {
 	log.Printf("- ExportOptionsPath: %s", configs.ExportOptionsPath)
 }
 
-//--------------------
-// Functions
-//--------------------
-
 func (configs ConfigsModel) validate() error {
-	// required
 	if err := input.ValidateIfPathExists(configs.ProjectPath); err != nil {
-		return fmt.Errorf("issue with ProjectPath: %s", err)
+		return fmt.Errorf("ProjectPath - %s", err)
 	}
 
 	if err := input.ValidateIfPathExists(configs.OutputDir); err != nil {
-		return fmt.Errorf("issue with OutputDir: %s", err)
+		return fmt.Errorf("OutputDir - %s", err)
 	}
 
 	if err := input.ValidateIfNotEmpty(configs.Scheme); err != nil {
-		return fmt.Errorf("issue with Scheme: %s", err)
+		return fmt.Errorf("Scheme - %s", err)
 	}
 
 	if err := input.ValidateWithOptions(configs.OutputTool, "xcpretty", "xcodebuild"); err != nil {
-		return fmt.Errorf("issue with OutputTool: %s", err)
+		return fmt.Errorf("OutputTool - %s", err)
 	}
 
 	if err := input.ValidateWithOptions(configs.IsCleanBuild, "yes", "no"); err != nil {
-		return fmt.Errorf("issue with IsCleanBuild: %s", err)
+		return fmt.Errorf("IsCleanBuild - %s", err)
 	}
 
 	if err := input.ValidateWithOptions(configs.IsExportXcarchiveZip, "yes", "no"); err != nil {
-		return fmt.Errorf("issue with IsExportXcarchiveZip: %s", err)
+		return fmt.Errorf("IsExportXcarchiveZip - %s", err)
 	}
 
 	if err := input.ValidateWithOptions(configs.IsExportAllDsyms, "yes", "no"); err != nil {
-		return fmt.Errorf("issue with IsExportAllDsyms: %s", err)
+		return fmt.Errorf("IsExportAllDsyms - %s", err)
 	}
 
 	if err := input.ValidateWithOptions(configs.ExportMethod, "none", "app-store", "development", "developer-id"); err != nil {
-		return fmt.Errorf("issue with ExportMethod: %s", err)
+		return fmt.Errorf("ExportMethod - %s", err)
 	}
 
 	if err := input.ValidateIfNotEmpty(configs.ArtifactName); err != nil {
-		return fmt.Errorf("issue with ArtifactName: %s", err)
+		return fmt.Errorf("ArtifactName - %s", err)
 	}
 
 	if configs.ExportOptionsPath != "" {
@@ -190,8 +184,7 @@ func failf(format string, v ...interface{}) {
 	os.Exit(1)
 }
 
-// GetXcprettyVersion ...
-func GetXcprettyVersion() (string, error) {
+func getXcprettyVersion() (string, error) {
 	cmd := command.New("xcpretty", "-version")
 	return cmd.RunAndReturnTrimmedCombinedOutput()
 }
@@ -213,10 +206,6 @@ func findIDEDistrubutionLogsPath(output string) (string, error) {
 
 	return "", nil
 }
-
-//--------------------
-// Main
-//--------------------
 
 func main() {
 	configs := createConfigsModelFromEnvs()
@@ -240,7 +229,7 @@ func main() {
 
 	// Detect xcpretty version
 	if configs.OutputTool == "xcpretty" {
-		xcprettyVersion, err := GetXcprettyVersion()
+		xcprettyVersion, err := getXcprettyVersion()
 		if err != nil {
 			failf("Failed to get the xcpretty version! Error: %s", err)
 		} else {
