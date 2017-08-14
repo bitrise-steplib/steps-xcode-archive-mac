@@ -12,7 +12,6 @@ import (
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-io/steps-xcode-archive/utils"
 	"github.com/bitrise-tools/go-steputils/input"
 	"github.com/bitrise-tools/go-steputils/output"
 	"github.com/bitrise-tools/go-steputils/tools"
@@ -428,7 +427,7 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable (va
 	log.Infof("Exporting xcarchive ...")
 	fmt.Println()
 
-	if err := utils.ExportOutputDir(archivePath, archivePath, bitriseXCArchiveDirPthEnvKey); err != nil {
+	if err := output.ExportOutputDir(archivePath, archivePath, bitriseXCArchiveDirPthEnvKey); err != nil {
 		failf("Failed to export %s, error: %s", bitriseXCArchiveDirPthEnvKey, err)
 	}
 
