@@ -519,7 +519,7 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable (va
 			}
 			certs = certificateutil.FilterValidCertificateInfos(certs)
 
-			profs, err := profileutil.InstalledProvisioningProfileInfos(profileutil.ProfileTypeIos)
+			profs, err := profileutil.InstalledProvisioningProfileInfos(profileutil.ProfileTypeMacOs)
 			if err != nil {
 				failf("Failed to get installed provisioning profiles, error: %s", err)
 			}
