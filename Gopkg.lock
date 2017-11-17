@@ -17,7 +17,7 @@
   branch = "export-review"
   name = "github.com/bitrise-tools/go-xcode"
   packages = ["certificateutil","export","exportoptions","models","plistutil","profileutil","utility","xcarchive","xcodebuild","xcpretty"]
-  revision = "f6ab1571b4ef065e93fb63618ffa58be30d7700f"
+  revision = "ad17d1e3a125c4ba9e60048e30aa113f372f76a5"
 
 [[projects]]
   branch = "master"
