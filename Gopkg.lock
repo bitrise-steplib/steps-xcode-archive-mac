@@ -14,10 +14,10 @@
   revision = "a848c9870ff7d745a8fb2a951e1c81fcb147b4ec"
 
 [[projects]]
-  branch = "export-review"
+  branch = "master"
   name = "github.com/bitrise-tools/go-xcode"
   packages = ["certificateutil","export","exportoptions","models","plistutil","profileutil","utility","xcarchive","xcodebuild","xcpretty"]
-  revision = "ad17d1e3a125c4ba9e60048e30aa113f372f76a5"
+  revision = "a75a0ebdabce4b1f973d1a50c15aa4be02b75145"
 
 [[projects]]
   branch = "master"
@@ -46,6 +46,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "94b516bd844450aba71da3a5a1453bf06af3e1a5ee63d9b77fa8358783bc8c9e"
+  inputs-digest = "c5cbce89ef2877740217aae5411f19fe530eb7287992bb0e7a9e04d6d5fea6ac"
   solver-name = "gps-cdcl"
   solver-version = 1

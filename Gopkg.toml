@@ -31,4 +31,4 @@
 
 [[constraint]]
   name = "github.com/bitrise-tools/go-xcode"
-  branch = "export-review"
+  branch = "master"
