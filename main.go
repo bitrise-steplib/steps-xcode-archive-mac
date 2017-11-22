@@ -577,6 +577,8 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable (va
 					options.BundleIDProvisioningProfileMapping = exportProfileMapping
 					options.SigningCertificate = macCodeSignGroup.Certificate.CommonName
 				}
+
+				exportOpts = options
 			}
 
 			log.Printf("generated export options content:")
