@@ -534,13 +534,15 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable (va
 				export.CreateExportMethodSelectableCodeSignGroupFilter(exportMethod),
 			)
 
-			installedMacAppStoreCertificates, err := certificateutil.InstalledMacAppStoreCertificateInfos()
+			installedInstallerCertificates, err := certificateutil.InstalledInstallerCertificateInfos()
 			if err != nil {
 				log.Errorf("Failed to read installed Installer certificates, error: %s", err)
 			}
 
+			installedInstallerCertificates = certificateutil.FilterValidCertificateInfos(installedInstallerCertificates)
+
 			var macCodeSignGroup *export.MacCodeSignGroup
-			macCodeSignGroups := export.CreateMacCodeSignGroup(codesignGroups, installedMacAppStoreCertificates, exportMethod)
+			macCodeSignGroups := export.CreateMacCodeSignGroup(codesignGroups, installedInstallerCertificates, exportMethod)
 			if len(macCodeSignGroups) == 0 {
 				log.Errorf("Can not create macos codesiging groups for the project")
 			} else if len(macCodeSignGroups) > 1 {
