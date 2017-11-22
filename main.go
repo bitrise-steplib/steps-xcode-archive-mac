@@ -513,18 +513,30 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable (va
 				bundleIDs = append(bundleIDs, bundleID)
 			}
 
-			certs, err := certificateutil.InstalledCodesigningCertificateInfos()
+			installedCertificates, err := certificateutil.InstalledCodesigningCertificateInfos()
 			if err != nil {
 				failf("Failed to get installed certificates, error: %s", err)
 			}
-			certs = certificateutil.FilterValidCertificateInfos(certs)
+			installedCertificates = certificateutil.FilterValidCertificateInfos(installedCertificates)
 
-			profs, err := profileutil.InstalledProvisioningProfileInfos(profileutil.ProfileTypeMacOs)
+			log.Debugf("\n")
+			log.Debugf("Installed certificates:")
+			for _, certInfo := range installedCertificates {
+				log.Debugf(certInfo.String())
+			}
+
+			installedProfiles, err := profileutil.InstalledProvisioningProfileInfos(profileutil.ProfileTypeMacOs)
 			if err != nil {
 				failf("Failed to get installed provisioning profiles, error: %s", err)
 			}
 
-			codesignGroups := export.CreateSelectableCodeSignGroups(certs, profs, bundleIDs)
+			log.Debugf("\n")
+			log.Debugf("Installed profiles:")
+			for _, profInfo := range installedProfiles {
+				log.Debugf(profInfo.String())
+			}
+
+			codesignGroups := export.CreateSelectableCodeSignGroups(installedCertificates, installedProfiles, bundleIDs)
 			if len(codesignGroups) == 0 {
 				log.Errorf("Failed to find code singing groups for the project")
 			}
@@ -534,12 +546,22 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable (va
 				export.CreateExportMethodSelectableCodeSignGroupFilter(exportMethod),
 			)
 
-			installedInstallerCertificates, err := certificateutil.InstalledInstallerCertificateInfos()
-			if err != nil {
-				log.Errorf("Failed to read installed Installer certificates, error: %s", err)
-			}
+			installedInstallerCertificates := []certificateutil.CertificateInfoModel{}
 
-			installedInstallerCertificates = certificateutil.FilterValidCertificateInfos(installedInstallerCertificates)
+			if exportMethod == exportoptions.MethodAppStore {
+				installedInstallerCertificates, err = certificateutil.InstalledInstallerCertificateInfos()
+				if err != nil {
+					log.Errorf("Failed to read installed Installer certificates, error: %s", err)
+				}
+
+				installedInstallerCertificates = certificateutil.FilterValidCertificateInfos(installedInstallerCertificates)
+
+				log.Debugf("\n")
+				log.Debugf("Installed installer certificates:")
+				for _, certInfo := range installedInstallerCertificates {
+					log.Debugf(certInfo.String())
+				}
+			}
 
 			var macCodeSignGroup *export.MacCodeSignGroup
 			macCodeSignGroups := export.CreateMacCodeSignGroup(codesignGroups, installedInstallerCertificates, exportMethod)
