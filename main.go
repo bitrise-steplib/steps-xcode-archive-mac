@@ -16,6 +16,7 @@ import (
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-io/go-utils/stringutil"
 	"github.com/bitrise-tools/go-steputils/input"
 	"github.com/bitrise-tools/go-steputils/output"
 	"github.com/bitrise-tools/go-steputils/tools"
@@ -380,10 +381,9 @@ func main() {
 		fmt.Println()
 
 		if rawXcodebuildOut, err := xcprettyCmd.Run(); err != nil {
-			newlines := strings.Count(rawXcodebuildOut, "\n")
-			lastLines := strings.SplitN(rawXcodebuildOut, "\n", newlines-9)
+
 			log.Errorf("\nLast lines of the Xcode build log:")
-			fmt.Println(lastLines[len(lastLines)-1])
+			fmt.Println(stringutil.LastNLines(rawXcodebuildOut, 10))
 
 			if err := output.ExportOutputFileContent(rawXcodebuildOut, rawXcodebuildOutputLogPath, bitriseXcodeRawResultTextEnvKey); err != nil {
 				log.Warnf("Failed to export %s, error: %s", bitriseXcodeRawResultTextEnvKey, err)
