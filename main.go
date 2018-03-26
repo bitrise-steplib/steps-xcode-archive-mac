@@ -372,6 +372,7 @@ func main() {
 	}
 
 	archiveCmd.SetArchivePath(archivePath)
+	archiveCmd.SetCustomOptions([]string{"-destination", "generic/platform=OS X"})
 
 	if configs.OutputTool == "xcpretty" {
 		xcprettyCmd := xcpretty.New(archiveCmd)
