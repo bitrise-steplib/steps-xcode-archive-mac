@@ -68,17 +68,17 @@ workflows:
         - is_export_xcarchive_zip: "yes"
         - export_method: app-store
         - verbose_log: "yes"
-    - path::./:
-        title: "Step Test: Developer ID"
-        inputs:
-        - project_path: $BITRISE_PROJECT_PATH
-        - scheme: $BITRISE_SCHEME
-        - is_clean_build: "yes"
-        - output_tool: xcodebuild
-        - is_export_all_dsyms: "yes"
-        - is_export_xcarchive_zip: "yes"
-        - export_method: developer-id
-        - verbose_log: "yes"
+    # - path::./:
+    #     title: "Step Test: Developer ID"
+    #     inputs:
+    #     - project_path: $BITRISE_PROJECT_PATH
+    #     - scheme: $BITRISE_SCHEME
+    #     - is_clean_build: "yes"
+    #     - output_tool: xcodebuild
+    #     - is_export_all_dsyms: "yes"
+    #     - is_export_xcarchive_zip: "yes"
+    #     - export_method: developer-id
+    #     - verbose_log: "yes"
     - path::./:
         title: "Step Test: None"
         inputs:
