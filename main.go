@@ -41,11 +41,12 @@ type ConfigsModel struct {
 	ExportMethod                    string `env:"export_method,opt[none,app-store,development,developer-id]"`
 	CustomExportOptionsPlistContent string `env:"custom_export_options_plist_content"`
 
-	ProjectPath   string `env:"project_path,dir"`
-	Scheme        string `env:"scheme,required"`
-	Configuration string `env:"configuration"`
-	IsCleanBuild  string `env:"is_clean_build,opt[yes,no]"`
-	WorkDir       string `env:"workdir"`
+	ProjectPath               string `env:"project_path,dir"`
+	Scheme                    string `env:"scheme,required"`
+	Configuration             string `env:"configuration"`
+	IsCleanBuild              string `env:"is_clean_build,opt[yes,no]"`
+	WorkDir                   string `env:"workdir"`
+	DisableIndexWhileBuilding bool   `env:"disable_index_while_building,opt[yes,no]"`
 
 	ForceTeamID                       string `env:"force_team_id"`
 	ForceCodeSignIdentity             string `env:"force_code_sign_identity"`
@@ -266,6 +267,7 @@ func main() {
 		archiveCmd.SetCustomBuildAction("clean")
 	}
 
+	archiveCmd.SetDisableIndexWhileBuilding(configs.DisableIndexWhileBuilding)
 	archiveCmd.SetArchivePath(archivePath)
 
 	if configs.OutputTool == "xcpretty" {
