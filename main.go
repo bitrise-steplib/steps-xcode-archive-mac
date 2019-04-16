@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/bitrise-io/go-steputils/input"
 	"github.com/bitrise-io/go-steputils/output"
+	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
@@ -38,132 +38,26 @@ const (
 
 // ConfigsModel ...
 type ConfigsModel struct {
-	ExportMethod                    string
-	CustomExportOptionsPlistContent string
+	ExportMethod                    string `env:"export_method,opt[none,app-store,development,developer-id]"`
+	CustomExportOptionsPlistContent string `env:"custom_export_options_plist_content"`
 
-	ProjectPath   string
-	Scheme        string
-	Configuration string
-	IsCleanBuild  string
-	WorkDir       string
+	ProjectPath   string `env:"project_path,dir"`
+	Scheme        string `env:"scheme,required"`
+	Configuration string `env:"configuration"`
+	IsCleanBuild  string `env:"is_clean_build,opt[yes,no]"`
+	WorkDir       string `env:"workdir"`
 
-	ForceTeamID                       string
-	ForceCodeSignIdentity             string
-	ForceProvisioningProfileSpecifier string
-	ForceProvisioningProfile          string
+	ForceTeamID                       string `env:"force_team_id"`
+	ForceCodeSignIdentity             string `env:"force_code_sign_identity"`
+	ForceProvisioningProfileSpecifier string `env:"force_provisioning_profile_specifier"`
+	ForceProvisioningProfile          string `env:"force_provisioning_profile"`
 
-	OutputTool           string
-	OutputDir            string
-	ArtifactName         string
-	IsExportXcarchiveZip string
-	IsExportAllDsyms     string
-	VerboseLog           string
-}
-
-func createConfigsModelFromEnvs() ConfigsModel {
-	return ConfigsModel{
-		ExportMethod:                    os.Getenv("export_method"),
-		CustomExportOptionsPlistContent: os.Getenv("custom_export_options_plist_content"),
-
-		ProjectPath:   os.Getenv("project_path"),
-		Scheme:        os.Getenv("scheme"),
-		Configuration: os.Getenv("configuration"),
-		IsCleanBuild:  os.Getenv("is_clean_build"),
-		WorkDir:       os.Getenv("workdir"),
-
-		ForceTeamID:                       os.Getenv("force_team_id"),
-		ForceCodeSignIdentity:             os.Getenv("force_code_sign_identity"),
-		ForceProvisioningProfileSpecifier: os.Getenv("force_provisioning_profile_specifier"),
-		ForceProvisioningProfile:          os.Getenv("force_provisioning_profile"),
-
-		OutputTool:           os.Getenv("output_tool"),
-		OutputDir:            os.Getenv("output_dir"),
-		ArtifactName:         os.Getenv("artifact_name"),
-		IsExportXcarchiveZip: os.Getenv("is_export_xcarchive_zip"),
-		IsExportAllDsyms:     os.Getenv("is_export_all_dsyms"),
-		VerboseLog:           os.Getenv("verbose_log"),
-	}
-}
-
-func (configs ConfigsModel) print() {
-	fmt.Println()
-
-	log.Infof("app/pkg export configs:")
-	useCustomExportOptions := (configs.CustomExportOptionsPlistContent != "")
-	if useCustomExportOptions {
-		fmt.Println()
-		log.Warnf("Ignoring the following options because CustomExportOptionsPlistContent provided:")
-	}
-	log.Printf("- ExportMethod: %s", configs.ExportMethod)
-	log.Printf("- CustomExportOptionsPlistContent:")
-	if configs.CustomExportOptionsPlistContent != "" {
-		log.Printf(configs.CustomExportOptionsPlistContent)
-	}
-
-	if useCustomExportOptions {
-		log.Warnf("----------")
-	}
-
-	log.Infof("xcodebuild configs:")
-	log.Printf("- ProjectPath: %s", configs.ProjectPath)
-	log.Printf("- Scheme: %s", configs.Scheme)
-	log.Printf("- Configuration: %s", configs.Configuration)
-	log.Printf("- IsCleanBuild: %s", configs.IsCleanBuild)
-	log.Printf("- WorkDir: %s", configs.WorkDir)
-
-	log.Infof("force archive codesign settings:")
-	log.Printf("- ForceTeamID: %s", configs.ForceTeamID)
-	log.Printf("- ForceCodeSignIdentity: %s", configs.ForceCodeSignIdentity)
-	log.Printf("- ForceProvisioningProfileSpecifier: %s", configs.ForceProvisioningProfileSpecifier)
-	log.Printf("- ForceProvisioningProfile: %s", configs.ForceProvisioningProfile)
-
-	log.Infof("step output configs:")
-	log.Printf("- OutputTool: %s", configs.OutputTool)
-	log.Printf("- OutputDir: %s", configs.OutputDir)
-	log.Printf("- ArtifactName: %s", configs.ArtifactName)
-	log.Printf("- IsExportXcarchiveZip: %s", configs.IsExportXcarchiveZip)
-	log.Printf("- IsExportAllDsyms: %s", configs.IsExportAllDsyms)
-	log.Printf("- VerboseLog: %s", configs.VerboseLog)
-}
-
-func (configs ConfigsModel) validate() error {
-	if err := input.ValidateIfPathExists(configs.ProjectPath); err != nil {
-		return fmt.Errorf("ProjectPath - %s", err)
-	}
-
-	if err := input.ValidateIfPathExists(configs.OutputDir); err != nil {
-		return fmt.Errorf("OutputDir - %s", err)
-	}
-
-	if err := input.ValidateIfNotEmpty(configs.Scheme); err != nil {
-		return fmt.Errorf("Scheme - %s", err)
-	}
-
-	if err := input.ValidateWithOptions(configs.OutputTool, "xcpretty", "xcodebuild"); err != nil {
-		return fmt.Errorf("OutputTool - %s", err)
-	}
-
-	if err := input.ValidateWithOptions(configs.IsCleanBuild, "yes", "no"); err != nil {
-		return fmt.Errorf("IsCleanBuild - %s", err)
-	}
-
-	if err := input.ValidateWithOptions(configs.IsExportXcarchiveZip, "yes", "no"); err != nil {
-		return fmt.Errorf("IsExportXcarchiveZip - %s", err)
-	}
-
-	if err := input.ValidateWithOptions(configs.IsExportAllDsyms, "yes", "no"); err != nil {
-		return fmt.Errorf("IsExportAllDsyms - %s", err)
-	}
-
-	if err := input.ValidateWithOptions(configs.ExportMethod, "none", "app-store", "development", "developer-id"); err != nil {
-		return fmt.Errorf("ExportMethod - %s", err)
-	}
-
-	if err := input.ValidateIfNotEmpty(configs.ArtifactName); err != nil {
-		return fmt.Errorf("ArtifactName - %s", err)
-	}
-
-	return nil
+	OutputTool           string `env:"output_tool,opt[xcpretty,xcodebuild]"`
+	OutputDir            string `env:"output_dir,dir"`
+	ArtifactName         string `env:"artifact_name,required"`
+	IsExportXcarchiveZip string `env:"is_export_xcarchive_zip,opt[yes,no]"`
+	IsExportAllDsyms     string `env:"is_export_all_dsyms,opt[yes,no]"`
+	VerboseLog           string `env:"verbose_log"`
 }
 
 func failf(format string, v ...interface{}) {
@@ -195,12 +89,13 @@ func findIDEDistrubutionLogsPath(output string) (string, error) {
 }
 
 func main() {
-	configs := createConfigsModelFromEnvs()
-	configs.print()
-	if err := configs.validate(); err != nil {
+	var configs ConfigsModel
+	if err := stepconf.Parse(&configs); err != nil {
 		failf("Issue with input: %s", err)
 	}
 
+	stepconf.Print(configs)
+	fmt.Println()
 	log.SetEnableDebugLog(configs.VerboseLog == "yes")
 
 	log.Infof("step determined configs:")
