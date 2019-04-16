@@ -8,22 +8,22 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/bitrise-io/go-steputils/input"
+	"github.com/bitrise-io/go-steputils/output"
+	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/stringutil"
-	"github.com/bitrise-tools/go-steputils/input"
-	"github.com/bitrise-tools/go-steputils/output"
-	"github.com/bitrise-tools/go-steputils/tools"
-	"github.com/bitrise-tools/go-xcode/certificateutil"
-	"github.com/bitrise-tools/go-xcode/export"
-	"github.com/bitrise-tools/go-xcode/exportoptions"
-	"github.com/bitrise-tools/go-xcode/profileutil"
-	"github.com/bitrise-tools/go-xcode/utility"
-	"github.com/bitrise-tools/go-xcode/xcarchive"
-	"github.com/bitrise-tools/go-xcode/xcodebuild"
-	"github.com/bitrise-tools/go-xcode/xcpretty"
+	"github.com/bitrise-io/go-xcode/certificateutil"
+	"github.com/bitrise-io/go-xcode/export"
+	"github.com/bitrise-io/go-xcode/exportoptions"
+	"github.com/bitrise-io/go-xcode/profileutil"
+	"github.com/bitrise-io/go-xcode/utility"
+	"github.com/bitrise-io/go-xcode/xcarchive"
+	"github.com/bitrise-io/go-xcode/xcodebuild"
+	"github.com/bitrise-io/go-xcode/xcpretty"
 )
 
 const (
@@ -346,7 +346,7 @@ func main() {
 		failf("Project file extension should be .xcodeproj or .xcworkspace, but got: %s", ext)
 	}
 
-	archiveCmd := xcodebuild.NewArchiveCommand(configs.ProjectPath, isWorkspace)
+	archiveCmd := xcodebuild.NewCommandBuilder(configs.ProjectPath, isWorkspace, xcodebuild.ArchiveAction)
 	archiveCmd.SetScheme(configs.Scheme)
 	archiveCmd.SetConfiguration(configs.Configuration)
 
@@ -580,7 +580,7 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 
 			exportProfileMapping := map[string]string{}
 			if macCodeSignGroup != nil {
-				for bundleID, profileInfo := range macCodeSignGroup.BundleIDProfileMap {
+				for bundleID, profileInfo := range macCodeSignGroup.BundleIDProfileMap() {
 					exportProfileMapping[bundleID] = profileInfo.Name
 				}
 			}
@@ -591,8 +591,8 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 
 				if macCodeSignGroup != nil {
 					options.BundleIDProvisioningProfileMapping = exportProfileMapping
-					options.SigningCertificate = macCodeSignGroup.Certificate.CommonName
-					options.InstallerSigningCertificate = macCodeSignGroup.InstallerCertificate.CommonName
+					options.SigningCertificate = macCodeSignGroup.Certificate().CommonName
+					options.InstallerSigningCertificate = macCodeSignGroup.InstallerCertificate().CommonName
 				}
 
 				exportOpts = options
@@ -601,7 +601,7 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 
 				if macCodeSignGroup != nil {
 					options.BundleIDProvisioningProfileMapping = exportProfileMapping
-					options.SigningCertificate = macCodeSignGroup.Certificate.CommonName
+					options.SigningCertificate = macCodeSignGroup.Certificate().CommonName
 				}
 
 				exportOpts = options
