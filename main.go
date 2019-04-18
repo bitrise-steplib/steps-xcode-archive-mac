@@ -12,6 +12,7 @@ import (
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
@@ -108,14 +109,49 @@ func main() {
 	}
 	log.Printf("- xcodebuild_version: %s (%s)", xcodebuildVersion.Version, xcodebuildVersion.BuildVersion)
 
-	// Detect xcpretty version
-	if cfg.OutputTool == "xcpretty" {
-		xcprettyVersion, err := getXcprettyVersion()
+	outputTool := cfg.OutputTool
+	if outputTool == "xcpretty" {
+		fmt.Println()
+		log.Infof("Checking if output tool (xcpretty) is installed")
+
+		installed, err := xcpretty.IsInstalled()
 		if err != nil {
-			failf("Failed to get the xcpretty version! Error: %s", err)
-		} else {
-			log.Printf("- xcpretty_version: %s", xcprettyVersion)
+			log.Warnf("Failed to check if xcpretty is installed, error: %s", err)
+			log.Printf("Switching to xcodebuild for output tool")
+			outputTool = "xcodebuild"
+		} else if !installed {
+			log.Warnf(`xcpretty is not installed`)
+			fmt.Println()
+			log.Printf("Installing xcpretty")
+
+			if cmds, err := xcpretty.Install(); err != nil {
+				log.Warnf("Failed to create xcpretty install command: %s", err)
+				log.Warnf("Switching to xcodebuild for output tool")
+				outputTool = "xcodebuild"
+			} else {
+				for _, cmd := range cmds {
+					if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
+						if errorutil.IsExitStatusError(err) {
+							log.Warnf("%s failed: %s", out)
+						} else {
+							log.Warnf("%s failed: %s", err)
+						}
+						log.Warnf("Switching to xcodebuild for output tool")
+						outputTool = "xcodebuild"
+					}
+				}
+			}
 		}
+	}
+
+	if outputTool == "xcpretty" {
+		xcprettyVersion, err := xcpretty.Version()
+		if err != nil {
+			log.Warnf("Failed to determin xcpretty version, error: %s", err)
+			log.Printf("Switching to xcodebuild for output tool")
+			outputTool = "xcodebuild"
+		}
+		log.Printf("- xcprettyVersion: %s", xcprettyVersion.String())
 	}
 
 	// Validation CustomExportOptionsPlistContent
@@ -270,7 +306,7 @@ func main() {
 	archiveCmd.SetDisableIndexWhileBuilding(cfg.DisableIndexWhileBuilding)
 	archiveCmd.SetArchivePath(archivePath)
 
-	if cfg.OutputTool == "xcpretty" {
+	if outputTool == "xcpretty" {
 		xcprettyCmd := xcpretty.New(archiveCmd)
 
 		log.TSuccessf("$ %s", xcprettyCmd.PrintableCmd())
@@ -515,7 +551,7 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 
 		exportCmd.SetExportOptionsPlist(exportOptionsPath)
 
-		if cfg.OutputTool == "xcpretty" {
+		if outputTool == "xcpretty" {
 			xcprettyCmd := xcpretty.New(exportCmd)
 
 			log.Donef("$ %s", xcprettyCmd.PrintableCmd())
