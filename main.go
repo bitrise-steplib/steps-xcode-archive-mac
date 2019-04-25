@@ -120,7 +120,7 @@ func main() {
 			log.Printf("Switching to xcodebuild for output tool")
 			outputTool = "xcodebuild"
 		} else if !installed {
-			log.Warnf(`xcpretty is not installed`)
+			log.Warnf("xcpretty is not installed")
 			fmt.Println()
 			log.Printf("Installing xcpretty")
 
@@ -147,7 +147,7 @@ func main() {
 	if outputTool == "xcpretty" {
 		xcprettyVersion, err := xcpretty.Version()
 		if err != nil {
-			log.Warnf("Failed to determin xcpretty version, error: %s", err)
+			log.Warnf("Failed to determine xcpretty version, error: %s", err)
 			log.Printf("Switching to xcodebuild for output tool")
 			outputTool = "xcodebuild"
 		}
