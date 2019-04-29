@@ -3,10 +3,24 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:83cf8830861be653ba3064b3b16c797aa808fd42be1cc1483b965783da9a1106"
+  name = "github.com/bitrise-io/go-steputils"
+  packages = [
+    "input",
+    "output",
+    "tools",
+  ]
+  pruneopts = ""
+  revision = "cecc766da84859e37e780d9d1c416f0f3993e6b1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:6083fc4e90fe661aad326c42fa16fb85774cb55711560d1208c82ff290534836"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
     "command",
+    "command/rubycommand",
     "errorutil",
     "fileutil",
     "log",
@@ -14,23 +28,15 @@
     "pkcs12",
     "pkcs12/internal/rc2",
     "stringutil",
-    "ziputil"
+    "ziputil",
   ]
-  revision = "b33f6bcef9b50045d7e62364b354584afc3ee329"
+  pruneopts = ""
+  revision = "2a09aab8380d7842750328aebd5671bcccea89c8"
 
 [[projects]]
   branch = "master"
-  name = "github.com/bitrise-tools/go-steputils"
-  packages = [
-    "input",
-    "output",
-    "tools"
-  ]
-  revision = "fde82e0ff3c0643076950c8642142207845eaa39"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/bitrise-tools/go-xcode"
+  digest = "1:0ba584e460213e429ce9ad6f82f18ebe74841e687450f677d5c606fb763e15ab"
+  name = "github.com/bitrise-io/go-xcode"
   packages = [
     "certificateutil",
     "export",
@@ -41,37 +47,71 @@
     "utility",
     "xcarchive",
     "xcodebuild",
-    "xcpretty"
+    "xcpretty",
   ]
-  revision = "d5a6b4f8a72e13fa03f1a55ffda39a395e2253d5"
+  pruneopts = ""
+  revision = "04a02fcd3c06c698d47ce4e27dbe105d6ea8eadc"
 
 [[projects]]
   branch = "master"
+  digest = "1:cef2ceaeca7caa4fc788727d44a8000c8a8ee827653fc7b52854d969bba131ac"
   name = "github.com/fullsailor/pkcs7"
   packages = ["."]
-  revision = "a009d8d7de53d9503c797cb8ec66fa3b21eed209"
+  pruneopts = ""
+  revision = "d7302db945fa6ea264fb79d8e13e931ea514a602"
 
 [[projects]]
+  digest = "1:b759103c9b4135568253c17d2866064cde398e93764b611caabf5aa8e3059685"
+  name = "github.com/hashicorp/go-version"
+  packages = ["."]
+  pruneopts = ""
+  revision = "d40cf49b3a77bba84a7afdbd7f1dc295d114efb1"
+  version = "v1.1.0"
+
+[[projects]]
+  digest = "1:1d7e1867c49a6dd9856598ef7c3123604ea3daabf5b83f303ff457bcbc410b1d"
   name = "github.com/pkg/errors"
   packages = ["."]
-  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
-  version = "v0.8.0"
+  pruneopts = ""
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
 
 [[projects]]
+  digest = "1:4244255905cb95c3c98894d671367f84a6292608ae528936fe46ba9c86f68393"
   name = "github.com/ryanuber/go-glob"
   packages = ["."]
-  revision = "572520ed46dbddaed19ea3d9541bdd0494163693"
-  version = "v0.1"
+  pruneopts = ""
+  revision = "51a8f68e6c24dc43f1e371749c89a267de4ebc53"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:e43acd1190dde7223727f1f8aeac537156d33bf87776d5637e672e1c6b354be4"
   name = "howett.net/plist"
   packages = ["."]
-  revision = "233df3c4f07b0c562da0e8a6fb850681ac49bb90"
+  pruneopts = ""
+  revision = "591f970eefbbeb04d7b37f334a0c4c3256e32876"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a53c18c194f4ff2741890f605a8fe89359771406cd7b77fa7955133c66dc789c"
+  input-imports = [
+    "github.com/bitrise-io/go-steputils/input",
+    "github.com/bitrise-io/go-steputils/output",
+    "github.com/bitrise-io/go-steputils/tools",
+    "github.com/bitrise-io/go-utils/command",
+    "github.com/bitrise-io/go-utils/fileutil",
+    "github.com/bitrise-io/go-utils/log",
+    "github.com/bitrise-io/go-utils/pathutil",
+    "github.com/bitrise-io/go-utils/stringutil",
+    "github.com/bitrise-io/go-xcode/certificateutil",
+    "github.com/bitrise-io/go-xcode/export",
+    "github.com/bitrise-io/go-xcode/exportoptions",
+    "github.com/bitrise-io/go-xcode/profileutil",
+    "github.com/bitrise-io/go-xcode/utility",
+    "github.com/bitrise-io/go-xcode/xcarchive",
+    "github.com/bitrise-io/go-xcode/xcodebuild",
+    "github.com/bitrise-io/go-xcode/xcpretty",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
