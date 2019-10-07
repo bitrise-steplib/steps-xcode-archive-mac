@@ -90,34 +90,11 @@ func findIDEDistrubutionLogsPath(output string) (string, error) {
 	return "", nil
 }
 
-func macCodeSignGroup(archive xcarchive.MacosArchive, exportMethod exportoptions.Method) (*export.MacCodeSignGroup, error) {
+func macCodeSignGroup(archive xcarchive.MacosArchive, installedCertificates []certificateutil.CertificateInfoModel, installedInstallerCertificates []certificateutil.CertificateInfoModel, installedProfiles []profileutil.ProvisioningProfileInfoModel, exportMethod exportoptions.Method) (*export.MacCodeSignGroup, error) {
 	bundleIDEntitlemnstMap := archive.BundleIDEntitlementsMap()
 	bundleIDs := []string{}
 	for bundleID := range bundleIDEntitlemnstMap {
 		bundleIDs = append(bundleIDs, bundleID)
-	}
-
-	installedCertificates, err := certificateutil.InstalledCodesigningCertificateInfos()
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get installed certificates, error: %s", err)
-	}
-	installedCertificates = certificateutil.FilterValidCertificateInfos(installedCertificates)
-
-	log.Debugf("\n")
-	log.Debugf("Installed certificates:")
-	for _, certInfo := range installedCertificates {
-		log.Debugf(certInfo.String())
-	}
-
-	installedProfiles, err := profileutil.InstalledProvisioningProfileInfos(profileutil.ProfileTypeMacOs)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get installed provisioning profiles, error: %s", err)
-	}
-
-	log.Debugf("\n")
-	log.Debugf("Installed profiles:")
-	for _, profInfo := range installedProfiles {
-		log.Debugf(profInfo.String())
 	}
 
 	codesignGroups := export.CreateSelectableCodeSignGroups(installedCertificates, installedProfiles, bundleIDs)
@@ -130,26 +107,9 @@ func macCodeSignGroup(archive xcarchive.MacosArchive, exportMethod exportoptions
 		export.CreateExportMethodSelectableCodeSignGroupFilter(exportMethod),
 	)
 
-	installedInstallerCertificates := []certificateutil.CertificateInfoModel{}
-
-	if exportMethod == exportoptions.MethodAppStore {
-		installedInstallerCertificates, err = certificateutil.InstalledInstallerCertificateInfos()
-		if err != nil {
-			log.Errorf("Failed to read installed Installer certificates, error: %s", err)
-		}
-
-		installedInstallerCertificates = certificateutil.FilterValidCertificateInfos(installedInstallerCertificates)
-
-		log.Debugf("\n")
-		log.Debugf("Installed installer certificates:")
-		for _, certInfo := range installedInstallerCertificates {
-			log.Debugf(certInfo.String())
-		}
-	}
-
 	macCodeSignGroups := export.CreateMacCodeSignGroup(codesignGroups, installedInstallerCertificates, exportMethod)
 	if len(macCodeSignGroups) == 0 {
-		log.Errorf("Can not create macos codesiging groups for the project")
+		return nil, fmt.Errorf("Can not create macos codesiging groups for the project")
 	} else if len(macCodeSignGroups) > 1 {
 		log.Warnf("Multiple matching  codesiging groups found for the project, using first...")
 	}
@@ -512,8 +472,51 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 
 			var macCSGroup *export.MacCodeSignGroup
 			exportProfileMapping := map[string]string{}
+
+			// We do not need provisioning profile for the export if the app in the generated XcArchive doesn't
+			// contain embedded provisioning profile.
+			// The only exception is the DeveloperID export. For DeveloperID export we always have to have
+			// provisioning profile.
 			if archive.Application.ProvisioningProfile != nil || exportMethod == exportoptions.MethodDeveloperID {
-				codesignGroup, err := macCodeSignGroup(archive, exportMethod)
+				installedCertificates, err := certificateutil.InstalledCodesigningCertificateInfos()
+				if err != nil {
+					failf("Failed to get installed certificates, error: %s", err)
+				}
+				installedCertificates = certificateutil.FilterValidCertificateInfos(installedCertificates)
+
+				log.Debugf("\n")
+				log.Debugf("Installed certificates:")
+				for _, certInfo := range installedCertificates {
+					log.Debugf(certInfo.String())
+				}
+
+				installedProfiles, err := profileutil.InstalledProvisioningProfileInfos(profileutil.ProfileTypeMacOs)
+				if err != nil {
+					failf("Failed to get installed provisioning profiles, error: %s", err)
+				}
+
+				log.Debugf("\n")
+				log.Debugf("Installed profiles:")
+				for _, profInfo := range installedProfiles {
+					log.Debugf(profInfo.String())
+				}
+
+				var installedInstallerCertificates []certificateutil.CertificateInfoModel
+				if exportMethod == exportoptions.MethodAppStore {
+					installedInstallerCertificates, err = certificateutil.InstalledInstallerCertificateInfos()
+					if err != nil {
+						log.Errorf("Failed to read installed Installer certificates, error: %s", err)
+					}
+					installedInstallerCertificates = certificateutil.FilterValidCertificateInfos(installedInstallerCertificates)
+
+					log.Debugf("\n")
+					log.Debugf("Installed installer certificates:")
+					for _, certInfo := range installedInstallerCertificates {
+						log.Debugf(certInfo.String())
+					}
+				}
+
+				codesignGroup, err := macCodeSignGroup(archive, installedCertificates, installedInstallerCertificates, installedProfiles, exportMethod)
 				if err != nil {
 					failf("Failed to find code sign groups for the project, error: %s", err)
 				}
