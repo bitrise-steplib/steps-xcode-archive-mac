@@ -477,6 +477,7 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 			// contain embedded provisioning profile.
 			// The only exception is the DeveloperID export. For DeveloperID export we always have to have
 			// provisioning profile.
+			log.Printf("archive.Application: %+v", archive.Application)
 			if archive.Application.ProvisioningProfile != nil || exportMethod == exportoptions.MethodDeveloperID {
 				installedCertificates, err := certificateutil.InstalledCodesigningCertificateInfos()
 				if err != nil {
@@ -516,16 +517,17 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 					}
 				}
 
-				codesignGroup, err := macCodeSignGroup(archive, installedCertificates, installedInstallerCertificates, installedProfiles, exportMethod)
+				macCSGroup, err = macCodeSignGroup(archive, installedCertificates, installedInstallerCertificates, installedProfiles, exportMethod)
 				if err != nil {
 					failf("Failed to find code sign groups for the project, error: %s", err)
 				}
 
-				if codesignGroup != nil {
-					for bundleID, profileInfo := range codesignGroup.BundleIDProfileMap() {
+				if macCSGroup != nil {
+					for bundleID, profileInfo := range macCSGroup.BundleIDProfileMap() {
 						exportProfileMapping[bundleID] = profileInfo.Name
 					}
 				}
+
 			} else {
 				log.Warnf("Archive was generated without provisioning profile and the export method is not DeveloperID")
 				log.Printf("Export the application without re-signing...")
