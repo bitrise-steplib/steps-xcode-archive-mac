@@ -87,7 +87,6 @@ workflows:
 
   _app_store:
     envs:
-    - TEST_NAME: App Store
     - EXPORT_METHOD: app-store
     - BRANCH: master
     after_run:
@@ -95,7 +94,6 @@ workflows:
 
   _app_store_with_profile:
     envs:
-    - TEST_NAME: App Store
     - EXPORT_METHOD: app-store
     - BRANCH: provisioning_profile
     after_run:
@@ -103,7 +101,6 @@ workflows:
 
   _copy:
     envs:
-    - TEST_NAME: None
     - EXPORT_METHOD: none
     - BRANCH: master
     after_run:
