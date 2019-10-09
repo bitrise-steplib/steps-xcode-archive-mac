@@ -446,7 +446,6 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 	} else {
 		// export using exportOptions
 		log.Printf("Export using exportOptions...")
-		fmt.Println()
 
 		exportTmpDir, err := pathutil.NormalizedOSTempDirPath("__export__")
 		if err != nil {
