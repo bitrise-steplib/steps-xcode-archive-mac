@@ -90,24 +90,72 @@ func findIDEDistrubutionLogsPath(output string) (string, error) {
 	return "", nil
 }
 
-func macCodeSignGroup(archive xcarchive.MacosArchive, installedCertificates []certificateutil.CertificateInfoModel, installedInstallerCertificates []certificateutil.CertificateInfoModel, installedProfiles []profileutil.ProvisioningProfileInfoModel, exportMethod exportoptions.Method) (*export.MacCodeSignGroup, error) {
+func macCodeSignGroup(archive xcarchive.MacosArchive, installedCertificates []certificateutil.CertificateInfoModel,
+	installedInstallerCertificates []certificateutil.CertificateInfoModel, installedProfiles []profileutil.ProvisioningProfileInfoModel,
+	exportMethod exportoptions.Method, cfg config) (*export.MacCodeSignGroup, error) {
+
 	bundleIDEntitlementsMap := archive.BundleIDEntitlementsMap()
 	bundleIDs := []string{}
 	for bundleID := range bundleIDEntitlementsMap {
 		bundleIDs = append(bundleIDs, bundleID)
 	}
 
-	codesignGroups := export.CreateSelectableCodeSignGroups(installedCertificates, installedProfiles, bundleIDs)
-	if len(codesignGroups) == 0 {
-		log.Errorf("Failed to find code singing groups for the project")
+	log.Printf("Resolving CodeSignGroups...")
+	codeSignGroups := export.CreateSelectableCodeSignGroups(installedCertificates, installedProfiles, bundleIDs)
+	if len(codeSignGroups) == 0 {
+		log.Errorf("Failed to find code signing groups for specified export method (%s)", exportMethod)
 	}
 
-	codesignGroups = export.FilterSelectableCodeSignGroups(codesignGroups,
-		export.CreateEntitlementsSelectableCodeSignGroupFilter(bundleIDEntitlementsMap),
-		export.CreateExportMethodSelectableCodeSignGroupFilter(exportMethod),
-	)
+	log.Debugf("\nGroups:")
+	for _, group := range codeSignGroups {
+		log.Debugf(group.String())
+	}
 
-	macCodeSignGroups := export.CreateMacCodeSignGroup(codesignGroups, installedInstallerCertificates, exportMethod)
+	if len(bundleIDEntitlementsMap) > 0 {
+		log.Warnf("Filtering CodeSignInfo groups for target capabilities")
+
+		codeSignGroups = export.FilterSelectableCodeSignGroups(codeSignGroups, export.CreateEntitlementsSelectableCodeSignGroupFilter(bundleIDEntitlementsMap))
+
+		log.Debugf("\nGroups after filtering for target capabilities:")
+		for _, group := range codeSignGroups {
+			log.Debugf(group.String())
+		}
+	}
+
+	log.Warnf("Filtering CodeSignInfo groups for export method")
+
+	codeSignGroups = export.FilterSelectableCodeSignGroups(codeSignGroups, export.CreateExportMethodSelectableCodeSignGroupFilter(exportMethod))
+
+	log.Debugf("\nGroups after filtering for export method:")
+	for _, group := range codeSignGroups {
+		log.Debugf(group.String())
+	}
+
+	if cfg.ForceTeamID != "" {
+		log.Warnf("Export TeamID specified: %s, filtering CodeSignInfo groups...", cfg.ForceTeamID)
+
+		codeSignGroups = export.FilterSelectableCodeSignGroups(codeSignGroups, export.CreateTeamSelectableCodeSignGroupFilter(cfg.ForceTeamID))
+
+		log.Debugf("\nGroups after filtering for team ID:")
+		for _, group := range codeSignGroups {
+			log.Debugf(group.String())
+		}
+	}
+
+	if !archive.IsXcodeManaged() {
+		log.Warnf("App was signed with NON xcode managed profile when archiving,\n" +
+			"only NOT xcode managed profiles are allowed to sign when exporting the archive.\n" +
+			"Removing xcode managed CodeSignInfo groups")
+
+		codeSignGroups = export.FilterSelectableCodeSignGroups(codeSignGroups, export.CreateNotXcodeManagedSelectableCodeSignGroupFilter())
+
+		log.Debugf("\nGroups after filtering for NOT Xcode managed profiles:")
+		for _, group := range codeSignGroups {
+			log.Debugf(group.String())
+		}
+	}
+
+	macCodeSignGroups := export.CreateMacCodeSignGroup(codeSignGroups, installedInstallerCertificates, exportMethod)
 	if len(macCodeSignGroups) == 0 {
 		return nil, fmt.Errorf("Can not create macos codesiging groups for the project")
 	} else if len(macCodeSignGroups) > 1 {
@@ -528,7 +576,7 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 					}
 				}
 
-				macCSGroup, err = macCodeSignGroup(archive, validCertificates.ValidCertificates, validInstallerCertificates.ValidCertificates, installedProfiles, exportMethod)
+				macCSGroup, err = macCodeSignGroup(archive, validCertificates.ValidCertificates, validInstallerCertificates.ValidCertificates, installedProfiles, exportMethod, cfg)
 				if err != nil {
 					failf("Failed to find code sign groups for the project, error: %s", err)
 				}
