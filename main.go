@@ -91,9 +91,9 @@ func findIDEDistrubutionLogsPath(output string) (string, error) {
 }
 
 func macCodeSignGroup(archive xcarchive.MacosArchive, installedCertificates []certificateutil.CertificateInfoModel, installedInstallerCertificates []certificateutil.CertificateInfoModel, installedProfiles []profileutil.ProvisioningProfileInfoModel, exportMethod exportoptions.Method) (*export.MacCodeSignGroup, error) {
-	bundleIDEntitlemnstMap := archive.BundleIDEntitlementsMap()
+	bundleIDEntitlementsMap := archive.BundleIDEntitlementsMap()
 	bundleIDs := []string{}
-	for bundleID := range bundleIDEntitlemnstMap {
+	for bundleID := range bundleIDEntitlementsMap {
 		bundleIDs = append(bundleIDs, bundleID)
 	}
 
@@ -103,7 +103,7 @@ func macCodeSignGroup(archive xcarchive.MacosArchive, installedCertificates []ce
 	}
 
 	codesignGroups = export.FilterSelectableCodeSignGroups(codesignGroups,
-		export.CreateEntitlementsSelectableCodeSignGroupFilter(bundleIDEntitlemnstMap),
+		export.CreateEntitlementsSelectableCodeSignGroupFilter(bundleIDEntitlementsMap),
 		export.CreateExportMethodSelectableCodeSignGroupFilter(exportMethod),
 	)
 
