@@ -27,7 +27,6 @@ workflows:
         - default_provisioning_profile_url: ""
     after_run:
     - _app_store
-    - _app_store_with_profile
     - _copy
 
   _common:
