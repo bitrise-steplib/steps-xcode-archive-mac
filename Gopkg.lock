@@ -3,19 +3,19 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:83cf8830861be653ba3064b3b16c797aa808fd42be1cc1483b965783da9a1106"
+  digest = "1:510cb6dddad542f24598cbb8dd8bc4dd0ff460284d459d118c9d475334e2a337"
   name = "github.com/bitrise-io/go-steputils"
   packages = [
-    "input",
     "output",
+    "stepconf",
     "tools",
   ]
   pruneopts = ""
-  revision = "cecc766da84859e37e780d9d1c416f0f3993e6b1"
+  revision = "f540824d77dfd382ce84fd0ee0a9da2fba1cce0a"
 
 [[projects]]
   branch = "master"
-  digest = "1:6083fc4e90fe661aad326c42fa16fb85774cb55711560d1208c82ff290534836"
+  digest = "1:3a02d422ffd847dfa33308f47cd499204fe69d1bb8c66e7e1f64663d2fc83df4"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
@@ -24,18 +24,20 @@
     "errorutil",
     "fileutil",
     "log",
+    "parseutil",
     "pathutil",
     "pkcs12",
     "pkcs12/internal/rc2",
+    "pointers",
     "stringutil",
     "ziputil",
   ]
   pruneopts = ""
-  revision = "2a09aab8380d7842750328aebd5671bcccea89c8"
+  revision = "ad86bf775472ce1934affb9d3cb7d5ea3dffd16f"
 
 [[projects]]
   branch = "master"
-  digest = "1:0ba584e460213e429ce9ad6f82f18ebe74841e687450f677d5c606fb763e15ab"
+  digest = "1:a5f12c062c76eac7bbcdd12e0383125961a24185ec5da378aaf67d22a46915fd"
   name = "github.com/bitrise-io/go-xcode"
   packages = [
     "certificateutil",
@@ -50,7 +52,7 @@
     "xcpretty",
   ]
   pruneopts = ""
-  revision = "04a02fcd3c06c698d47ce4e27dbe105d6ea8eadc"
+  revision = "19cbfe6430acc193d779847a13be0b8585d866c1"
 
 [[projects]]
   branch = "master"
@@ -61,12 +63,12 @@
   revision = "d7302db945fa6ea264fb79d8e13e931ea514a602"
 
 [[projects]]
-  digest = "1:b759103c9b4135568253c17d2866064cde398e93764b611caabf5aa8e3059685"
+  digest = "1:2f0c811248aeb64978037b357178b1593372439146bda860cb16f2c80785ea93"
   name = "github.com/hashicorp/go-version"
   packages = ["."]
   pruneopts = ""
-  revision = "d40cf49b3a77bba84a7afdbd7f1dc295d114efb1"
-  version = "v1.1.0"
+  revision = "ac23dc3fea5d1a983c43f6a0f6e2c13f0195d8bd"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:1d7e1867c49a6dd9856598ef7c3123604ea3daabf5b83f303ff457bcbc410b1d"
@@ -96,10 +98,11 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/bitrise-io/go-steputils/input",
     "github.com/bitrise-io/go-steputils/output",
+    "github.com/bitrise-io/go-steputils/stepconf",
     "github.com/bitrise-io/go-steputils/tools",
     "github.com/bitrise-io/go-utils/command",
+    "github.com/bitrise-io/go-utils/errorutil",
     "github.com/bitrise-io/go-utils/fileutil",
     "github.com/bitrise-io/go-utils/log",
     "github.com/bitrise-io/go-utils/pathutil",
