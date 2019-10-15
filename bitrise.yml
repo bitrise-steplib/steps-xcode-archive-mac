@@ -22,9 +22,7 @@ workflows:
     - go-test:
     - certificate-and-profile-installer:
         inputs:
-        - default_certificate_url: ""
-        - default_certificate_passphrase: ""
-        - default_provisioning_profile_url: ""
+        - install_defaults: "false"
     after_run:
     - _app_store
     - _copy
