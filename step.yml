@@ -67,7 +67,7 @@ inputs:
       category: "app/pkg export configs"
   - xcodebuild_options:
     opts:
-      category: Debug
+      category: xcodebuild configs
       title: Additional options for xcodebuild call
       description: |-
         Options added to the end of the xcodebuild call.
