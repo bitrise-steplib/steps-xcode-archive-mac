@@ -67,11 +67,6 @@ func failf(format string, v ...interface{}) {
 	os.Exit(1)
 }
 
-func getXcprettyVersion() (string, error) {
-	cmd := command.New("xcpretty", "-version")
-	return cmd.RunAndReturnTrimmedCombinedOutput()
-}
-
 func findIDEDistrubutionLogsPath(output string) (string, error) {
 	pattern := `IDEDistribution: -\[IDEDistributionLogging _createLoggingBundleAtPath:\]: Created bundle at path '(?P<log_path>.*)'`
 	re := regexp.MustCompile(pattern)
