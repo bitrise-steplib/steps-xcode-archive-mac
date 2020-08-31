@@ -99,6 +99,7 @@ func macCodeSignGroup(archive xcarchive.MacosArchive, installedCertificates []ce
 	for bundleID := range bundleIDEntitlementsMap {
 		bundleIDs = append(bundleIDs, bundleID)
 	}
+	log.Debugf("Bundle IDs in archive: %s", bundleIDs)
 
 	log.Printf("Resolving CodeSignGroups...")
 	codeSignGroups := export.CreateSelectableCodeSignGroups(installedCertificates, installedProfiles, bundleIDs)
@@ -522,9 +523,7 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 
 			// We do not need provisioning profile for the export if the app in the generated XcArchive doesn't
 			// contain embedded provisioning profile.
-			// The only exception is the DeveloperID export. For DeveloperID export we always have to have
-			// provisioning profile.
-			if archive.Application.ProvisioningProfile != nil || exportMethod == exportoptions.MethodDeveloperID {
+			if archive.Application.ProvisioningProfile != nil {
 				installedCertificates, err := certificateutil.InstalledCodesigningCertificateInfos()
 				if err != nil {
 					failf("Failed to get installed certificates, error: %s", err)
@@ -588,8 +587,8 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 				}
 
 			} else {
-				log.Warnf("Archive was generated without provisioning profile and the export method is not DeveloperID")
-				log.Printf("Export the application without re-signing...")
+				log.Printf("Archive was generated without provisioning profile.")
+				log.Printf("Export the application using automatic signing...")
 				fmt.Println()
 			}
 
