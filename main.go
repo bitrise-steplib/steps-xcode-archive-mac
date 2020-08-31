@@ -88,6 +88,9 @@ func findIDEDistrubutionLogsPath(output string) (string, error) {
 func macCodeSignGroup(archive xcarchive.MacosArchive, installedCertificates []certificateutil.CertificateInfoModel,
 	installedInstallerCertificates []certificateutil.CertificateInfoModel, installedProfiles []profileutil.ProvisioningProfileInfoModel,
 	exportMethod exportoptions.Method, cfg config) (*export.MacCodeSignGroup, error) {
+	if archive.Application.ProvisioningProfile == nil {
+		return nil, fmt.Errorf("precondition false, provisioning profile expected in the archive")
+	}
 
 	bundleIDEntitlementsMap := archive.BundleIDEntitlementsMap()
 	bundleIDs := []string{}
@@ -138,6 +141,7 @@ func macCodeSignGroup(archive xcarchive.MacosArchive, installedCertificates []ce
 		}
 	}
 
+	log.Debugf("Provisioning profile name in the archive: %s", archive.Application.ProvisioningProfile.Name)
 	if !archive.IsXcodeManaged() {
 		log.Warnf("App was signed with NON xcode managed profile when archiving,\n" +
 			"only NOT xcode managed profiles are allowed to sign when exporting the archive.\n" +
