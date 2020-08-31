@@ -528,17 +528,18 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 				if err != nil {
 					failf("Failed to get installed certificates, error: %s", err)
 				}
-				validCertificates := certificateutil.FilterValidCertificateInfos(installedCertificates)
+				certificates := certificateutil.FilterValidCertificateInfos(installedCertificates)
+				validCertificates := append(certificates.ValidCertificates, certificates.DuplicatedCertificates...)
 
 				log.Debugf("\n")
 				log.Debugf("Installed valid certificates:")
-				for _, certInfo := range validCertificates.ValidCertificates {
+				for _, certInfo := range validCertificates {
 					log.Debugf(certInfo.String())
 				}
 
 				log.Debugf("\n")
 				log.Debugf("Installed invalid certificates:")
-				for _, certInfo := range validCertificates.InvalidCertificates {
+				for _, certInfo := range certificates.InvalidCertificates {
 					log.Debugf(certInfo.String())
 				}
 				log.Debugf("\n")
@@ -554,28 +555,29 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 					log.Debugf(profInfo.String())
 				}
 
-				var validInstallerCertificates certificateutil.ValidCertificateInfo
+				var validInstallerCertificates []certificateutil.CertificateInfoModel
 				if exportMethod == exportoptions.MethodAppStore {
 					installedInstallerCertificates, err := certificateutil.InstalledInstallerCertificateInfos()
 					if err != nil {
 						log.Errorf("Failed to read installed Installer certificates, error: %s", err)
 					}
-					validInstallerCertificates = certificateutil.FilterValidCertificateInfos(installedInstallerCertificates)
+					installerCertificates := certificateutil.FilterValidCertificateInfos(installedInstallerCertificates)
+					validInstallerCertificates = append(installerCertificates.ValidCertificates, installerCertificates.DuplicatedCertificates...)
 
 					log.Debugf("\n")
 					log.Debugf("Installed valid installer certificates:")
-					for _, certInfo := range validInstallerCertificates.ValidCertificates {
+					for _, certInfo := range validInstallerCertificates {
 						log.Debugf(certInfo.String())
 					}
 
 					log.Debugf("\n")
 					log.Debugf("Installed invalid installer certificates:")
-					for _, certInfo := range validInstallerCertificates.InvalidCertificates {
+					for _, certInfo := range installerCertificates.InvalidCertificates {
 						log.Debugf(certInfo.String())
 					}
 				}
 
-				macCSGroup, err = macCodeSignGroup(archive, validCertificates.ValidCertificates, validInstallerCertificates.ValidCertificates, installedProfiles, exportMethod, cfg)
+				macCSGroup, err = macCodeSignGroup(archive, validCertificates, validInstallerCertificates, installedProfiles, exportMethod, cfg)
 				if err != nil {
 					failf("Failed to find code sign groups for the project, error: %s", err)
 				}
