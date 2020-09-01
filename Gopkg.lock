@@ -29,7 +29,6 @@
     "pkcs12",
     "pkcs12/internal/rc2",
     "pointers",
-    "sliceutil",
     "stringutil",
     "ziputil",
   ]
@@ -38,7 +37,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:45b269e986ce3434f619555333149934582cc72296796b8af2bef8df44361ef9"
+  digest = "1:e74d8eddd2cf95b097a3ad67615f5b68a76b8f41dba657f000bcb69f4ed18b65"
   name = "github.com/bitrise-io/go-xcode"
   packages = [
     "certificateutil",
@@ -53,7 +52,7 @@
     "xcpretty",
   ]
   pruneopts = "UT"
-  revision = "daa88266b1647d462667866ffdd6fbece7157c0a"
+  revision = "4f50762fd715b79a51183e49878be04d1413f798"
 
 [[projects]]
   branch = "master"
@@ -70,6 +69,14 @@
   pruneopts = "UT"
   revision = "59da58cfd357de719a4d16dac30481391a56c002"
   version = "v1.2.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:400e113a367b511b9b09ca642ee11d9885485a93838526d697033af334a2fdde"
+  name = "github.com/kballard/go-shellquote"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "95032a82bc518f77982ea72343cc1ade730072f0"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -107,7 +114,6 @@
     "github.com/bitrise-io/go-utils/fileutil",
     "github.com/bitrise-io/go-utils/log",
     "github.com/bitrise-io/go-utils/pathutil",
-    "github.com/bitrise-io/go-utils/sliceutil",
     "github.com/bitrise-io/go-utils/stringutil",
     "github.com/bitrise-io/go-xcode/certificateutil",
     "github.com/bitrise-io/go-xcode/export",
