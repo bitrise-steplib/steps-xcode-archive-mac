@@ -110,6 +110,15 @@ inputs:
         Working directory of the step.
         You can leave it empty to leave the working directory unchanged.
       category: "xcodebuild configs"
+  - xcodebuild_options:
+    opts:
+      category: xcodebuild configs
+      title: Additional options for xcodebuild call
+      description: |-
+        Options added to the end of the xcodebuild call.
+
+        You can use multiple options, separated by a space
+        character. Example: `-xcconfig PATH -verbose`
   - disable_index_while_building: "yes"
     opts:
       category: "xcodebuild configs"

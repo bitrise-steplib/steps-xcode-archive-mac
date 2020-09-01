@@ -25,6 +25,7 @@ import (
 	"github.com/bitrise-io/go-xcode/xcarchive"
 	"github.com/bitrise-io/go-xcode/xcodebuild"
 	"github.com/bitrise-io/go-xcode/xcpretty"
+	"github.com/kballard/go-shellquote"
 )
 
 const (
@@ -42,6 +43,7 @@ type config struct {
 	ExportMethod                    string `env:"export_method,opt[none,app-store,development,developer-id]"`
 	CustomExportOptionsPlistContent string `env:"custom_export_options_plist_content"`
 
+	XcodebuildOptions         string `env:"xcodebuild_options"`
 	ProjectPath               string `env:"project_path,dir"`
 	Scheme                    string `env:"scheme,required"`
 	Configuration             string `env:"configuration"`
@@ -379,6 +381,14 @@ func main() {
 
 	archiveCmd.SetDisableIndexWhileBuilding(cfg.DisableIndexWhileBuilding)
 	archiveCmd.SetArchivePath(archivePath)
+
+	if cfg.XcodebuildOptions != "" {
+		userOptions, err := shellquote.Split(cfg.XcodebuildOptions)
+		if err != nil {
+			failf("Failed to shell split XcodebuildOptions (%s), error: %s", cfg.XcodebuildOptions)
+		}
+		archiveCmd.SetCustomOptions(userOptions)
+	}
 
 	if outputTool == "xcpretty" {
 		xcprettyCmd := xcpretty.New(archiveCmd)
