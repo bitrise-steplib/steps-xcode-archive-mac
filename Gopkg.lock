@@ -29,6 +29,7 @@
     "pkcs12",
     "pkcs12/internal/rc2",
     "pointers",
+    "sliceutil",
     "stringutil",
     "ziputil",
   ]
@@ -106,6 +107,7 @@
     "github.com/bitrise-io/go-utils/fileutil",
     "github.com/bitrise-io/go-utils/log",
     "github.com/bitrise-io/go-utils/pathutil",
+    "github.com/bitrise-io/go-utils/sliceutil",
     "github.com/bitrise-io/go-utils/stringutil",
     "github.com/bitrise-io/go-xcode/certificateutil",
     "github.com/bitrise-io/go-xcode/export",
@@ -115,6 +117,7 @@
     "github.com/bitrise-io/go-xcode/xcarchive",
     "github.com/bitrise-io/go-xcode/xcodebuild",
     "github.com/bitrise-io/go-xcode/xcpretty",
+    "github.com/kballard/go-shellquote",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
