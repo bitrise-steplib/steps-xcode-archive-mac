@@ -3,19 +3,19 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:510cb6dddad542f24598cbb8dd8bc4dd0ff460284d459d118c9d475334e2a337"
+  digest = "1:90d5ebae3cb432c6c6401ff564d59f9cb918cc24f40a698a268dc3dba9f0ac33"
   name = "github.com/bitrise-io/go-steputils"
   packages = [
     "output",
     "stepconf",
     "tools",
   ]
-  pruneopts = ""
-  revision = "f540824d77dfd382ce84fd0ee0a9da2fba1cce0a"
+  pruneopts = "UT"
+  revision = "6d5afa53c7b85b6135e382105116d245b5997ace"
 
 [[projects]]
   branch = "master"
-  digest = "1:3a02d422ffd847dfa33308f47cd499204fe69d1bb8c66e7e1f64663d2fc83df4"
+  digest = "1:eb6763e9d0fbbf364b0290bf0e24977ce7e9ae4f44106ae2d1bf8d0dc185d0fe"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
@@ -32,12 +32,12 @@
     "stringutil",
     "ziputil",
   ]
-  pruneopts = ""
-  revision = "ad86bf775472ce1934affb9d3cb7d5ea3dffd16f"
+  pruneopts = "UT"
+  revision = "0c47c16813a4209321c9d0dba2e75867d6901ff2"
 
 [[projects]]
   branch = "master"
-  digest = "1:a5f12c062c76eac7bbcdd12e0383125961a24185ec5da378aaf67d22a46915fd"
+  digest = "1:45b269e986ce3434f619555333149934582cc72296796b8af2bef8df44361ef9"
   name = "github.com/bitrise-io/go-xcode"
   packages = [
     "certificateutil",
@@ -51,48 +51,48 @@
     "xcodebuild",
     "xcpretty",
   ]
-  pruneopts = ""
-  revision = "19cbfe6430acc193d779847a13be0b8585d866c1"
+  pruneopts = "UT"
+  revision = "daa88266b1647d462667866ffdd6fbece7157c0a"
 
 [[projects]]
   branch = "master"
-  digest = "1:cef2ceaeca7caa4fc788727d44a8000c8a8ee827653fc7b52854d969bba131ac"
+  digest = "1:0bd05495dbd0567480e48eac9e6602d87875a8747b13c3c0fcb7c83c7c921776"
   name = "github.com/fullsailor/pkcs7"
   packages = ["."]
-  pruneopts = ""
+  pruneopts = "UT"
   revision = "d7302db945fa6ea264fb79d8e13e931ea514a602"
 
 [[projects]]
-  digest = "1:2f0c811248aeb64978037b357178b1593372439146bda860cb16f2c80785ea93"
+  digest = "1:95732e0c27df672b3fdf5cdd8edd18cba5fc07263ef7cd25eaaad4afc4730313"
   name = "github.com/hashicorp/go-version"
   packages = ["."]
-  pruneopts = ""
-  revision = "ac23dc3fea5d1a983c43f6a0f6e2c13f0195d8bd"
-  version = "v1.2.0"
+  pruneopts = "UT"
+  revision = "59da58cfd357de719a4d16dac30481391a56c002"
+  version = "v1.2.1"
 
 [[projects]]
-  digest = "1:1d7e1867c49a6dd9856598ef7c3123604ea3daabf5b83f303ff457bcbc410b1d"
+  digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
   name = "github.com/pkg/errors"
   packages = ["."]
-  pruneopts = ""
+  pruneopts = "UT"
   revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
   version = "v0.8.1"
 
 [[projects]]
-  digest = "1:4244255905cb95c3c98894d671367f84a6292608ae528936fe46ba9c86f68393"
+  digest = "1:6baa565fe16f8657cf93469b2b8a6c61a277827734400d27e44d589547297279"
   name = "github.com/ryanuber/go-glob"
   packages = ["."]
-  pruneopts = ""
+  pruneopts = "UT"
   revision = "51a8f68e6c24dc43f1e371749c89a267de4ebc53"
   version = "v1.0.0"
 
 [[projects]]
   branch = "master"
-  digest = "1:e43acd1190dde7223727f1f8aeac537156d33bf87776d5637e672e1c6b354be4"
+  digest = "1:b5ead2120cd278858a83be14ef551f54295da350033dbc3f227fe0298b880256"
   name = "howett.net/plist"
   packages = ["."]
-  pruneopts = ""
-  revision = "591f970eefbbeb04d7b37f334a0c4c3256e32876"
+  pruneopts = "UT"
+  revision = "3b63eb3a43b59c776909681ed1fcb412b47d3c9a"
 
 [solve-meta]
   analyzer-name = "dep"

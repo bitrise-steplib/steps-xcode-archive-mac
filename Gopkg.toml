@@ -1,11 +1,16 @@
-[[constraint]]
-  name = "github.com/bitrise-io/go-utils"
-  branch = "master"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/bitrise-io/go-steputils"
-  branch = "master"
 
 [[constraint]]
-  name = "github.com/bitrise-io/go-xcode"
   branch = "master"
+  name = "github.com/bitrise-io/go-utils"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/bitrise-io/go-xcode"
+
+[prune]
+  go-tests = true
+  unused-packages = true
