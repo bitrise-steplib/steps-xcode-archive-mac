@@ -65,15 +65,6 @@ inputs:
 
         Call `xcodebuild -help` for available export options.
       category: "app/pkg export configs"
-  - xcodebuild_options:
-    opts:
-      category: xcodebuild configs
-      title: Additional options for xcodebuild call
-      description: |-
-        Options added to the end of the xcodebuild call.
-
-        You can use multiple options, separated by a space
-        character. Example: `-xcconfig PATH -verbose`
   - project_path: $BITRISE_PROJECT_PATH
     opts:
       title: "Project (or Workspace) path"
@@ -119,6 +110,15 @@ inputs:
         Working directory of the step.
         You can leave it empty to leave the working directory unchanged.
       category: "xcodebuild configs"
+  - xcodebuild_options:
+    opts:
+      category: xcodebuild configs
+      title: Additional options for xcodebuild call
+      description: |-
+        Options added to the end of the xcodebuild call.
+
+        You can use multiple options, separated by a space
+        character. Example: `-xcconfig PATH -verbose`
   - disable_index_while_building: "yes"
     opts:
       category: "xcodebuild configs"
