@@ -69,11 +69,6 @@ func failf(format string, v ...interface{}) {
 	os.Exit(1)
 }
 
-func getXcprettyVersion() (string, error) {
-	cmd := command.New("xcpretty", "-version")
-	return cmd.RunAndReturnTrimmedCombinedOutput()
-}
-
 func findIDEDistrubutionLogsPath(output string) (string, error) {
 	pattern := `IDEDistribution: -\[IDEDistributionLogging _createLoggingBundleAtPath:\]: Created bundle at path '(?P<log_path>.*)'`
 	re := regexp.MustCompile(pattern)
@@ -95,12 +90,16 @@ func findIDEDistrubutionLogsPath(output string) (string, error) {
 func macCodeSignGroup(archive xcarchive.MacosArchive, installedCertificates []certificateutil.CertificateInfoModel,
 	installedInstallerCertificates []certificateutil.CertificateInfoModel, installedProfiles []profileutil.ProvisioningProfileInfoModel,
 	exportMethod exportoptions.Method, cfg config) (*export.MacCodeSignGroup, error) {
+	if archive.Application.ProvisioningProfile == nil {
+		return nil, fmt.Errorf("precondition false, provisioning profile expected in the archive")
+	}
 
 	bundleIDEntitlementsMap := archive.BundleIDEntitlementsMap()
 	bundleIDs := []string{}
 	for bundleID := range bundleIDEntitlementsMap {
 		bundleIDs = append(bundleIDs, bundleID)
 	}
+	log.Debugf("Bundle IDs in archive: %s", bundleIDs)
 
 	log.Printf("Resolving CodeSignGroups...")
 	codeSignGroups := export.CreateSelectableCodeSignGroups(installedCertificates, installedProfiles, bundleIDs)
@@ -144,6 +143,7 @@ func macCodeSignGroup(archive xcarchive.MacosArchive, installedCertificates []ce
 		}
 	}
 
+	log.Debugf("Provisioning profile name in the archive: %s", archive.Application.ProvisioningProfile.Name)
 	if !archive.IsXcodeManaged() {
 		log.Warnf("App was signed with NON xcode managed profile when archiving,\n" +
 			"only NOT xcode managed profiles are allowed to sign when exporting the archive.\n" +
@@ -532,24 +532,23 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 
 			// We do not need provisioning profile for the export if the app in the generated XcArchive doesn't
 			// contain embedded provisioning profile.
-			// The only exception is the DeveloperID export. For DeveloperID export we always have to have
-			// provisioning profile.
-			if archive.Application.ProvisioningProfile != nil || exportMethod == exportoptions.MethodDeveloperID {
+			if archive.Application.ProvisioningProfile != nil {
 				installedCertificates, err := certificateutil.InstalledCodesigningCertificateInfos()
 				if err != nil {
 					failf("Failed to get installed certificates, error: %s", err)
 				}
-				validCertificates := certificateutil.FilterValidCertificateInfos(installedCertificates)
+				certificates := certificateutil.FilterValidCertificateInfos(installedCertificates)
+				validCertificates := append(certificates.ValidCertificates, certificates.DuplicatedCertificates...)
 
 				log.Debugf("\n")
 				log.Debugf("Installed valid certificates:")
-				for _, certInfo := range validCertificates.ValidCertificates {
+				for _, certInfo := range validCertificates {
 					log.Debugf(certInfo.String())
 				}
 
 				log.Debugf("\n")
 				log.Debugf("Installed invalid certificates:")
-				for _, certInfo := range validCertificates.InvalidCertificates {
+				for _, certInfo := range certificates.InvalidCertificates {
 					log.Debugf(certInfo.String())
 				}
 				log.Debugf("\n")
@@ -565,28 +564,29 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 					log.Debugf(profInfo.String())
 				}
 
-				var validInstallerCertificates certificateutil.ValidCertificateInfo
+				var validInstallerCertificates []certificateutil.CertificateInfoModel
 				if exportMethod == exportoptions.MethodAppStore {
 					installedInstallerCertificates, err := certificateutil.InstalledInstallerCertificateInfos()
 					if err != nil {
 						log.Errorf("Failed to read installed Installer certificates, error: %s", err)
 					}
-					validInstallerCertificates = certificateutil.FilterValidCertificateInfos(installedInstallerCertificates)
+					installerCertificates := certificateutil.FilterValidCertificateInfos(installedInstallerCertificates)
+					validInstallerCertificates = append(installerCertificates.ValidCertificates, installerCertificates.DuplicatedCertificates...)
 
 					log.Debugf("\n")
 					log.Debugf("Installed valid installer certificates:")
-					for _, certInfo := range validInstallerCertificates.ValidCertificates {
+					for _, certInfo := range validInstallerCertificates {
 						log.Debugf(certInfo.String())
 					}
 
 					log.Debugf("\n")
 					log.Debugf("Installed invalid installer certificates:")
-					for _, certInfo := range validInstallerCertificates.InvalidCertificates {
+					for _, certInfo := range installerCertificates.InvalidCertificates {
 						log.Debugf(certInfo.String())
 					}
 				}
 
-				macCSGroup, err = macCodeSignGroup(archive, validCertificates.ValidCertificates, validInstallerCertificates.ValidCertificates, installedProfiles, exportMethod, cfg)
+				macCSGroup, err = macCodeSignGroup(archive, validCertificates, validInstallerCertificates, installedProfiles, exportMethod, cfg)
 				if err != nil {
 					failf("Failed to find code sign groups for the project, error: %s", err)
 				}
@@ -598,8 +598,8 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 				}
 
 			} else {
-				log.Warnf("Archive was generated without provisioning profile and the export method is not DeveloperID")
-				log.Printf("Export the application without re-signing...")
+				log.Printf("Archive was generated without provisioning profile.")
+				log.Printf("Export the application using automatic signing...")
 				fmt.Println()
 			}
 
