@@ -16,6 +16,7 @@ import (
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-io/go-utils/sliceutil"
 	"github.com/bitrise-io/go-utils/stringutil"
 	"github.com/bitrise-io/go-xcode/certificateutil"
 	"github.com/bitrise-io/go-xcode/export"
@@ -382,13 +383,21 @@ func main() {
 	archiveCmd.SetDisableIndexWhileBuilding(cfg.DisableIndexWhileBuilding)
 	archiveCmd.SetArchivePath(archivePath)
 
+	destination := "generic/platform=macOS"
+	options := []string{"-destination", destination}
 	if cfg.XcodebuildOptions != "" {
 		userOptions, err := shellquote.Split(cfg.XcodebuildOptions)
 		if err != nil {
 			failf("Failed to shell split XcodebuildOptions (%s), error: %s", cfg.XcodebuildOptions)
 		}
-		archiveCmd.SetCustomOptions(userOptions)
+
+		if sliceutil.IsStringInSlice("-destination", userOptions) {
+			options = userOptions
+		} else {
+			options = append(options, userOptions...)
+		}
 	}
+	archiveCmd.SetCustomOptions(options)
 
 	if outputTool == "xcpretty" {
 		xcprettyCmd := xcpretty.New(archiveCmd)
