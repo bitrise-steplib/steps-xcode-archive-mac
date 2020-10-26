@@ -11,11 +11,11 @@
     "tools",
   ]
   pruneopts = "UT"
-  revision = "6d5afa53c7b85b6135e382105116d245b5997ace"
+  revision = "03ae3a6ded35c5e8aed0058ec270e3494d242d17"
 
 [[projects]]
   branch = "master"
-  digest = "1:eb6763e9d0fbbf364b0290bf0e24977ce7e9ae4f44106ae2d1bf8d0dc185d0fe"
+  digest = "1:d47bd470a0f26c25e4f1500e4a8abd95f0ec205c92ff9ca266127e27876065e5"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
@@ -29,15 +29,16 @@
     "pkcs12",
     "pkcs12/internal/rc2",
     "pointers",
+    "sliceutil",
     "stringutil",
     "ziputil",
   ]
   pruneopts = "UT"
-  revision = "0c47c16813a4209321c9d0dba2e75867d6901ff2"
+  revision = "6cc2aa4d248adef509996ac484bffd38856ddf80"
 
 [[projects]]
   branch = "master"
-  digest = "1:e74d8eddd2cf95b097a3ad67615f5b68a76b8f41dba657f000bcb69f4ed18b65"
+  digest = "1:e8108eb49b207508535d950748c140b43bca938294ab64be612521abee627f32"
   name = "github.com/bitrise-io/go-xcode"
   packages = [
     "certificateutil",
@@ -52,7 +53,7 @@
     "xcpretty",
   ]
   pruneopts = "UT"
-  revision = "4f50762fd715b79a51183e49878be04d1413f798"
+  revision = "7d05f87f6e9c9004759304ae8c3f3c90ea9c3bd4"
 
 [[projects]]
   branch = "master"
@@ -96,11 +97,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b5ead2120cd278858a83be14ef551f54295da350033dbc3f227fe0298b880256"
+  digest = "1:92b6e14d99fc9684a56c91055b66882eed40e5f601a1316b8da860d0538d7da3"
   name = "howett.net/plist"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3b63eb3a43b59c776909681ed1fcb412b47d3c9a"
+  revision = "117a925f21509a9550f452433c190139e480a726"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -114,6 +115,7 @@
     "github.com/bitrise-io/go-utils/fileutil",
     "github.com/bitrise-io/go-utils/log",
     "github.com/bitrise-io/go-utils/pathutil",
+    "github.com/bitrise-io/go-utils/sliceutil",
     "github.com/bitrise-io/go-utils/stringutil",
     "github.com/bitrise-io/go-xcode/certificateutil",
     "github.com/bitrise-io/go-xcode/export",
