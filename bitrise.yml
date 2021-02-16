@@ -5,7 +5,7 @@ app:
   envs:
   # define these in your .bitrise.secrets.yml
   - SAMPLE_APP_URL: https://github.com/bitrise-io/macos-sample-app.git
-  - BRANCH: master
+  - BRANCH: fixed-master
   - BITRISE_PROJECT_PATH: macos-sample-app.xcodeproj
   - BITRISE_SCHEME: macos-sample-app
 
@@ -86,7 +86,7 @@ workflows:
   _app_store:
     envs:
     - EXPORT_METHOD: app-store
-    - BRANCH: master
+    - BRANCH: fixed-master
     - TEAM_ID: ""
     after_run:
     - _common
@@ -94,7 +94,7 @@ workflows:
   _app_store_with_profile:
     envs:
     - EXPORT_METHOD: app-store
-    - BRANCH: provisioning_profile
+    - BRANCH: fixed-provisioning_profile
     - TEAM_ID: "72SA8V3WYL"
     after_run:
     - _common
@@ -102,7 +102,7 @@ workflows:
   _copy:
     envs:
     - EXPORT_METHOD: none
-    - BRANCH: master
+    - BRANCH: fixed-master
     - TEAM_ID: ""
     after_run:
     - _common
