@@ -20,9 +20,9 @@ workflows:
     - golint:
     - errcheck:
     - go-test:
-    # - certificate-and-profile-installer:
-        # inputs:
-        # - install_defaults: "no"
+    - certificate-and-profile-installer:
+        inputs:
+        - install_defaults: "no"
     after_run:
     - _app_store
     - _copy
