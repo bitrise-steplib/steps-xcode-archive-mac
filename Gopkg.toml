@@ -8,7 +8,7 @@
   name = "github.com/bitrise-io/go-utils"
 
 [[constraint]]
-  branch = "master"
+  branch = "v1"
   name = "github.com/bitrise-io/go-xcode"
 
 [prune]
