@@ -4,3 +4,4 @@ _output/
 .gows*
 .DS_Store
 steps-xcode-archive-mac
+.idea
