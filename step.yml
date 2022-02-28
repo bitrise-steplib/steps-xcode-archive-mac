@@ -1,6 +1,6 @@
 title: Xcode Archive for Mac
 summary: |-
-  Create an archive for your OS X project so you can share it, upload it, deploy it and catch them
+  Create an archive for your macOS project so you can share it, upload it, deploy it and catch them
   all! Well, maybe not the last one.
 description: ""
 website: https://github.com/bitrise-steplib/steps-xcode-archive-mac
@@ -68,7 +68,6 @@ inputs:
 - project_path: $BITRISE_PROJECT_PATH
   opts:
     title: Project (or Workspace) path
-    summary: ""
     description: |
       A `.xcodeproj` or `.xcworkspace` path.
     is_required: true
@@ -76,15 +75,12 @@ inputs:
 - scheme: $BITRISE_SCHEME
   opts:
     title: Scheme name
-    summary: ""
-    description: |
-      The Scheme to use.
+    summary: Scheme to use in archiving
     is_required: true
     category: xcodebuild configs
 - configuration:
   opts:
     title: Configuration name
-    summary: ""
     description: |
       (optional) The configuration to use. By default, your Scheme
       defines which configuration (Debug, Release, ...) should be used,
@@ -96,7 +92,8 @@ inputs:
     category: xcodebuild configs
 - is_clean_build: "yes"
   opts:
-    title: Do a clean Xcode build before the archive?
+    title: Clean build before archive
+    summary: Do a clean Xcode build before the archive?
     value_options:
     - "yes"
     - "no"
@@ -105,7 +102,6 @@ inputs:
 - workdir: $BITRISE_SOURCE_DIR
   opts:
     title: Working directory
-    summary: ""
     description: |
       Working directory of the step.
       You can leave it empty to leave the working directory unchanged.
@@ -215,7 +211,6 @@ inputs:
 - output_dir: $BITRISE_DEPLOY_DIR
   opts:
     title: Output directory path
-    summary: ""
     description: |
       This directory will contain the generated .app or .pkg file's and .dSYM.zip files.
     category: step output configs
@@ -259,16 +254,21 @@ inputs:
 outputs:
 - BITRISE_EXPORTED_FILE_PATH:
   opts:
-    title: The created .app.zip or .pkg file's path
+    title: Exported file path
+    description: The created .app.zip or .pkg file's path
 - BITRISE_APP_PATH:
   opts:
-    title: The created .app path
+    title: "`.app` path"
+    description: The created .app path
 - BITRISE_DSYM_PATH:
   opts:
-    title: The created .dSYM.zip file's path
+    title: "`.dSYM` ZIP path"
+    description: The created .dSYM.zip file's path
 - BITRISE_XCARCHIVE_PATH:
   opts:
-    title: The created .xcarchive.zip file's path
+    title: "`.xcarchive` ZIP path"
+    description: The created .xcarchive.zip file's path
 - BITRISE_MACOS_XCARCHIVE_PATH:
   opts:
-    title: The created .xcarchive dir's path
+    title: "`.xcarchive` path"
+    description: The created .xcarchive dir's path

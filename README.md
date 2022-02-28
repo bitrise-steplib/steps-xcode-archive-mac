@@ -1,92 +1,71 @@
-# Xcode Archive step for Mac
+# Xcode Archive for Mac
 
-Run Xcode Archive and export a Mac app/pkg.
+[![Step changelog](https://shields.io/github/v/release/bitrise-steplib/steps-xcode-archive-mac?include_prereleases&label=changelog&color=blueviolet)](https://github.com/bitrise-steplib/steps-xcode-archive-mac/releases)
 
+Create an archive for your OS X project so you can share it, upload it, deploy it and catch them
+all! Well, maybe not the last one.
 
-## How to use this Step
-
-Can be run directly with the [bitrise CLI](https://github.com/bitrise-io/bitrise),
-just `git clone` this repository, `cd` into it's folder in your Terminal/Command Line
-and call `bitrise run test`.
-
-*Check the `bitrise.yml` file for required inputs which have to be
-added to your `.bitrise.secrets.yml` file!*
-
-Step by step:
-
-1. Open up your Terminal / Command Line
-2. `git clone` the repository
-3. `cd` into the directory of the step (the one you just `git clone`d)
-5. Create a `.bitrise.secrets.yml` file in the same directory of `bitrise.yml` - the `.bitrise.secrets.yml` is a git ignored file, you can store your secrets in
-6. Check the `bitrise.yml` file for any secret you should set in `.bitrise.secrets.yml`
-  * Best practice is to mark these options with something like `# define these in your .bitrise.secrets.yml`, in the `app:envs` section.
-7. Once you have all the required secret parameters in your `.bitrise.secrets.yml` you can just run this step with the [bitrise CLI](https://github.com/bitrise-io/bitrise): `bitrise run test`
-
-An example `.bitrise.secrets.yml` file:
-
-```
-envs:
-- A_SECRET_PARAM_ONE: the value for secret one
-- A_SECRET_PARAM_TWO: the value for secret two
-```
-
-## How to create your own step
-
-1. Create a new git repository for your step (**don't fork** the *step template*, create a *new* repository)
-2. Copy the [step template](https://github.com/bitrise-steplib/step-template) files into your repository
-3. Fill the `step.sh` with your functionality
-4. Wire out your inputs to `step.yml` (`inputs` section)
-5. Fill out the other parts of the `step.yml` too
-6. Provide test values for the inputs in the `bitrise.yml`
-7. Run your step with `bitrise run test` - if it works, you're ready
-
-__For Step development guidelines & best practices__ check this documentation: [https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md](https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md).
-
-**NOTE:**
-
-If you want to use your step in your project's `bitrise.yml`:
-
-1. git push the step into it's repository
-2. reference it in your `bitrise.yml` with the `git::PUBLIC-GIT-CLONE-URL@BRANCH` step reference style:
-
-```
-- git::https://github.com/user/my-step.git@branch:
-   title: My step
-   inputs:
-   - my_input_1: "my value 1"
-   - my_input_2: "my value 2"
-```
-
-You can find more examples of step reference styles
-in the [bitrise CLI repository](https://github.com/bitrise-io/bitrise/blob/master/_examples/tutorials/steps-and-workflows/bitrise.yml#L65).
-
-## How to contribute to this Step
-
-1. Fork this repository
-2. `git clone` it
-3. Create a branch you'll work on
-4. To use/test the step just follow the **How to use this Step** section
-5. Do the changes you want to
-6. Run/test the step before sending your contribution
-  * You can also test the step in your `bitrise` project, either on your Mac or on [bitrise.io](https://www.bitrise.io)
-  * You just have to replace the step ID in your project's `bitrise.yml` with either a relative path, or with a git URL format
-  * (relative) path format: instead of `- original-step-id:` use `- path::./relative/path/of/script/on/your/Mac:`
-  * direct git URL format: instead of `- original-step-id:` use `- git::https://github.com/user/step.git@branch:`
-  * You can find more example of alternative step referencing at: https://github.com/bitrise-io/bitrise/blob/master/_examples/tutorials/steps-and-workflows/bitrise.yml
-7. Once you're done just commit your changes & create a Pull Request
+<details>
+<summary>Description</summary>
 
 
-## Share your own Step
+</details>
 
-You can share your Step or step version with the [bitrise CLI](https://github.com/bitrise-io/bitrise). If you use the `bitrise.yml` included in this repository, all you have to do is:
+## 🧩 Get started
 
-1. In your Terminal / Command Line `cd` into this directory (where the `bitrise.yml` of the step is located)
-1. Run: `bitrise run test` to test the step
-1. Run: `bitrise run audit-this-step` to audit the `step.yml`
-1. Check the `share-this-step` workflow in the `bitrise.yml`, and fill out the
-   `envs` if you haven't done so already (don't forget to bump the version number if this is an update
-   of your step!)
-1. Then run: `bitrise run share-this-step` to share the step (version) you specified in the `envs`
-1. Send the Pull Request, as described in the logs of `bitrise run share-this-step`
+Add this step directly to your workflow in the [Bitrise Workflow Editor](https://devcenter.bitrise.io/steps-and-workflows/steps-and-workflows-index/).
 
-That's all ;)
+You can also run this step directly with [Bitrise CLI](https://github.com/bitrise-io/bitrise).
+
+## ⚙️ Configuration
+
+<details>
+<summary>Inputs</summary>
+
+| Key | Description | Flags | Default |
+| --- | --- | --- | --- |
+| `export_method` | The method for exporting the application.  - `development`: Save a copy of the application signed with your Development identity. - `app-store`: Sign and package application for distribution in the Mac App Store. - `developer-id`: Save a copy of the application signed with your Developer ID. - `none`: Export a copy of the application without re-signing.  See `xcodebuild -help` for more information. | required | `development` |
+| `custom_export_options_plist_content` | Used for Xcode version 7 and above.  Specifies a custom export options plist content that configures archive exporting. If empty, step generates these options based on provisioning profile, with default values.  Auto generated export options available for export methods:  - app-store - ad-hoc - enterprise - development  If the step doesn't find an export method based on the provisioning profile(s), the development method will be used.  Call `xcodebuild -help` for available export options. |  |  |
+| `project_path` | A `.xcodeproj` or `.xcworkspace` path.  | required | `$BITRISE_PROJECT_PATH` |
+| `scheme` | Scheme to use in archiving | required | `$BITRISE_SCHEME` |
+| `configuration` | (optional) The configuration to use. By default, your Scheme defines which configuration (Debug, Release, ...) should be used, but you can overwrite it with this option. **Make sure that the Configuration you specify actually exists in your Xcode Project**. If it does not (for example, if you have a typo in the value of this input), Xcode will simply use the Configuration specified by the Scheme and will silently ignore this parameter!  |  |  |
+| `is_clean_build` | Do a clean Xcode build before the archive? | required | `yes` |
+| `workdir` | Working directory of the step. You can leave it empty to leave the working directory unchanged.  |  | `$BITRISE_SOURCE_DIR` |
+| `xcodebuild_options` | Options added to the end of the xcodebuild call.  You can use multiple options, separated by a space character. Example: `-xcconfig PATH -verbose` |  |  |
+| `disable_index_while_building` | Could make the build faster by adding `COMPILER_INDEX_STORE_ENABLE=NO` flag to the `xcodebuild` command which will disable the indexing during the build.  Indexing is needed for  * Autocomplete * Ability to quickly jump to definition * Get class and method help by alt clicking.  Which are not needed in CI environment.  **Note:** In Xcode you can turn off the `Index-WhileBuilding` feature  by disabling the `Enable Index-WhileBuilding Functionality` in the `Build Settings`.<br/> In CI environment you can disable it by adding `COMPILER_INDEX_STORE_ENABLE=NO` flag to the `xcodebuild` command. |  | `yes` |
+| `force_team_id` | Used for Xcode version 8 and above.  Force xcodebuild to use the specified Developer Portal team during archive.  Format example:  - `1MZX23ABCD4` |  |  |
+| `force_code_sign_identity` | Force xcodebuild to use specified Code Sign Identity.  Specify code signing identity as full ID (e.g. `Mac Developer: Bitrise Bot (VV2J4SV8V4)`) or specify code signing group ( `Mac Developer` or `Mac Distribution` ).  You also have to **specify the Identity in the format it's stored in Xcode project settings**, and **not how it's presented in the Xcode.app GUI**! **The input is case sensitive**: `Mac Distribution` works but `mac distribution` does not! |  |  |
+| `force_provisioning_profile_specifier` | Used for Xcode version 8 and above.  Force xcodebuild to use specified Provisioning Profile.  How to get your Provisioning Profile Specifier:  - In Xcode make sure you disabled `Automatically manage signing` on your project's `General` tab - Now you can select your Provisioning Profile Specifier's name as `Provisioning Profile` input value on your project's `General` tab - `force_provisioning_profile_specifier` input value build up by the Team ID and the Provisioning Profile Specifier name, separated with slash character ('/'): `TEAM_ID/PROFILE_SPECIFIER_NAME`  Format example:  - `1MZX23ABCD4/My Provisioning Profile` |  |  |
+| `force_provisioning_profile` | Force xcodebuild to use the specified Provisioning Profile.  Use Provisioning Profile's UUID. The profile's name is not accepted by xcodebuild.  How to get your UUID:  - In Xcode select your project -> Build Settings -> Code Signing - Select the desired Provisioning Profile, then scroll down in profile list and click on Other... - The popup will show your profile's UUID.  Format example:  - c5be4123-1234-4f9d-9843-0d9be985a068 |  |  |
+| `output_tool` | If output_tool is set to xcpretty, the xcodebuild output will be prettified by xcpretty. If output_tool is set to xcodebuild, the raw xcodebuild output will be printed. | required | `xcpretty` |
+| `output_dir` | This directory will contain the generated .app or .pkg file's and .dSYM.zip files.  |  | `$BITRISE_DEPLOY_DIR` |
+| `artifact_name` | This name will be used as basename for the generated .xcarchive, .app or .pkg and .dSYM.zip files. | required | `${scheme}` |
+| `is_export_xcarchive_zip` | If this input is set to `yes`, the generated .xcarchive will be zipped and moved to `output_dir`.  | required | `no` |
+| `is_export_all_dsyms` | If this input is set to `yes` step will collect every dsym (.app dsym and framwork dsyms) in a directory, zip it and export the zipped directory path. Otherwise only .app dsym will be zipped and the zip path exported. | required | `no` |
+| `verbose_log` | Enable verbose logging? | required | `no` |
+</details>
+
+<details>
+<summary>Outputs</summary>
+
+| Environment Variable | Description |
+| --- | --- |
+| `BITRISE_EXPORTED_FILE_PATH` | The created .app.zip or .pkg file's path |
+| `BITRISE_APP_PATH` | The created .app path |
+| `BITRISE_DSYM_PATH` | The created .dSYM.zip file's path |
+| `BITRISE_XCARCHIVE_PATH` | The created .xcarchive.zip file's path |
+| `BITRISE_MACOS_XCARCHIVE_PATH` | The created .xcarchive dir's path |
+</details>
+
+## 🙋 Contributing
+
+We welcome [pull requests](https://github.com/bitrise-steplib/steps-xcode-archive-mac/pulls) and [issues](https://github.com/bitrise-steplib/steps-xcode-archive-mac/issues) against this repository.
+
+For pull requests, work on your changes in a forked repository and use the Bitrise CLI to [run step tests locally](https://devcenter.bitrise.io/bitrise-cli/run-your-first-build/).
+
+**Note:** this step's end-to-end tests (defined in `e2e/bitrise.yml`) are working with secrets which are intentionally not stored in this repo. External contributors won't be able to run those tests. Don't worry, if you open a PR with your contribution, we will help with running tests and make sure that they pass.
+
+Learn more about developing steps:
+
+- [Create your own step](https://devcenter.bitrise.io/contributors/create-your-own-step/)
+- [Testing your Step](https://devcenter.bitrise.io/contributors/testing-and-versioning-your-steps/)
