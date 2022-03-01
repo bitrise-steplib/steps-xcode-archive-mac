@@ -15,19 +15,20 @@ app:
   - BITRISE_APPLE_PROVISIONING_PROFILE_URL_LIST: $BITRISE_APPLE_PROVISIONING_PROFILE_URL_LIST
 
 workflows:
-  #  test_app_store:
-  #    envs:
-  #    - EXPORT_METHOD: app-store
-  #    - BRANCH: master
-  #    before_run:
-  #    - _common
+    test_app_store:
+      envs:
+      - EXPORT_METHOD: app-store
+      # TODO: temporary branch
+      - BRANCH: distribution-cert
+      before_run:
+      - _common
 
-  test_app_store_with_profile:
-    envs:
-    - EXPORT_METHOD: app-store
-    - BRANCH: provisioning_profile
-    before_run:
-    - _common
+#  test_app_store_with_profile:
+#    envs:
+#    - EXPORT_METHOD: app-store
+#    - BRANCH: provisioning_profile
+#    before_run:
+#    - _common
 
   _common:
     steps:
