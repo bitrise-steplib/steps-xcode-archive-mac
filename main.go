@@ -71,7 +71,7 @@ func failf(format string, v ...interface{}) {
 }
 
 func findIDEDistrubutionLogsPath(output string) (string, error) {
-	pattern := `IDEDistribution: -\[IDEDistributionLogging _createLoggingBundleAtPath:\]: Created bundle at path '(?P<log_path>.*)'`
+	pattern := `IDEDistribution: -\[IDEDistributionLogging _createLoggingBundleAtPath:\]: Created bundle at path "(?P<log_path>.*)"`
 	re := regexp.MustCompile(pattern)
 
 	scanner := bufio.NewScanner(strings.NewReader(output))
@@ -160,9 +160,9 @@ func macCodeSignGroup(archive xcarchive.MacosArchive, installedCertificates []ce
 
 	macCodeSignGroups := export.CreateMacCodeSignGroup(codeSignGroups, installedInstallerCertificates, exportMethod)
 	if len(macCodeSignGroups) == 0 {
-		return nil, fmt.Errorf("Can not create macos codesiging groups for the project")
+		return nil, fmt.Errorf("can not create macos codesiging groups for the project")
 	} else if len(macCodeSignGroups) > 1 {
-		log.Warnf("Multiple matching  codesiging groups found for the project, using first...")
+		log.Warnf("Multiple matching codesiging groups found for the project, using first...")
 	}
 	return &(macCodeSignGroups[0]), nil
 }
