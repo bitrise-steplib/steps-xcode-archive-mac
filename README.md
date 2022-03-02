@@ -2,7 +2,7 @@
 
 [![Step changelog](https://shields.io/github/v/release/bitrise-steplib/steps-xcode-archive-mac?include_prereleases&label=changelog&color=blueviolet)](https://github.com/bitrise-steplib/steps-xcode-archive-mac/releases)
 
-Create an archive for your OS X project so you can share it, upload it, deploy it and catch them
+Create an archive for your macOS project so you can share it, upload it, deploy it and catch them
 all! Well, maybe not the last one.
 
 <details>
@@ -16,6 +16,20 @@ all! Well, maybe not the last one.
 Add this step directly to your workflow in the [Bitrise Workflow Editor](https://devcenter.bitrise.io/steps-and-workflows/steps-and-workflows-index/).
 
 You can also run this step directly with [Bitrise CLI](https://github.com/bitrise-io/bitrise).
+
+### Example
+
+Create an archive and export the app, then deploy it as a build artifact:
+
+```yaml
+steps:
+- certificate-and-profile-installer: {} # Requires certificates and profiles uploaded to Bitrise
+- xcode-archive-mac:
+    inputs:
+    - scheme: $BITRISE_SCHEME
+    - export_method: app-store
+- deploy-to-bitrise-io: {}
+```
 
 ## ⚙️ Configuration
 

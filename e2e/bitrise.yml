@@ -4,7 +4,6 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 app:
   envs:
   - SAMPLE_APP_URL: https://github.com/bitrise-io/macos-sample-app.git
-  - BRANCH: master
   - BITRISE_PROJECT_PATH: macos-sample-app.xcodeproj
   - BITRISE_SCHEME: macos-sample-app
   # define these in your .bitrise.secrets.yml
@@ -15,18 +14,18 @@ app:
   - BITRISE_APPLE_PROVISIONING_PROFILE_URL_LIST: $BITRISE_APPLE_PROVISIONING_PROFILE_URL_LIST
 
 workflows:
-  test_copy:
-    envs:
-    - EXPORT_METHOD: none
-    - BRANCH: provisioning_profile
-    after_run:
-    - _common
-
   test_app_store_with_profile:
     envs:
     - EXPORT_METHOD: app-store
     - BRANCH: provisioning_profile
     before_run:
+    - _common
+
+  test_copy:
+    envs:
+    - EXPORT_METHOD: none
+    - BRANCH: provisioning_profile
+    after_run:
     - _common
 
   _common:
@@ -77,15 +76,3 @@ workflows:
             echo "-> BITRISE_APP_PATH: ${BITRISE_APP_PATH}"
             echo "-> BITRISE_XCARCHIVE_PATH: ${BITRISE_XCARCHIVE_PATH}"
             echo "-> BITRISE_MACOS_XCARCHIVE_PATH: ${BITRISE_MACOS_XCARCHIVE_PATH}"
-
-    # - path::./:
-    #     title: "Step Test: Developer ID"
-    #     inputs:
-    #     - project_path: $BITRISE_PROJECT_PATH
-    #     - scheme: $BITRISE_SCHEME
-    #     - is_clean_build: "yes"
-    #     - output_tool: xcodebuild
-    #     - is_export_all_dsyms: "yes"
-    #     - is_export_xcarchive_zip: "yes"
-    #     - export_method: developer-id
-    #     - verbose_log: "yes"
