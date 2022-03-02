@@ -15,13 +15,12 @@ app:
   - BITRISE_APPLE_PROVISIONING_PROFILE_URL_LIST: $BITRISE_APPLE_PROVISIONING_PROFILE_URL_LIST
 
 workflows:
-  #  test_app_store:
-  #    envs:
-  #    - EXPORT_METHOD: app-store
-  #    # TODO: temporary branch
-  #    - BRANCH: distribution-cert
-  #    before_run:
-  #    - _common
+  test_copy:
+    envs:
+    - EXPORT_METHOD: none
+    - BRANCH: provisioning_profile
+    after_run:
+    - _common
 
   test_app_store_with_profile:
     envs:
@@ -78,15 +77,6 @@ workflows:
             echo "-> BITRISE_APP_PATH: ${BITRISE_APP_PATH}"
             echo "-> BITRISE_XCARCHIVE_PATH: ${BITRISE_XCARCHIVE_PATH}"
             echo "-> BITRISE_MACOS_XCARCHIVE_PATH: ${BITRISE_MACOS_XCARCHIVE_PATH}"
-
-  # TODO
-  _copy:
-    envs:
-    - EXPORT_METHOD: none
-    - BRANCH: master
-    - TEAM_ID: ""
-    after_run:
-    - _common
 
     # - path::./:
     #     title: "Step Test: Developer ID"
