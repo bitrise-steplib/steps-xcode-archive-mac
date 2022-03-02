@@ -28,6 +28,13 @@ workflows:
     after_run:
     - _common
 
+  test_developer_id:
+    envs:
+    - EXPORT_METHOD: developer-id
+    - BRANCH: provisioning_profile
+    after_run:
+    - _common
+
   _common:
     steps:
     - script:
