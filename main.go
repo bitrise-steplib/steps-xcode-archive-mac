@@ -71,7 +71,7 @@ func failf(format string, v ...interface{}) {
 }
 
 func findIDEDistrubutionLogsPath(output string) (string, error) {
-	pattern := `IDEDistribution: -\[IDEDistributionLogging _createLoggingBundleAtPath:\]: Created bundle at path '(?P<log_path>.*)'`
+	pattern := `IDEDistribution: -\[IDEDistributionLogging _createLoggingBundleAtPath:\]: Created bundle at path "(?P<log_path>.*)"`
 	re := regexp.MustCompile(pattern)
 
 	scanner := bufio.NewScanner(strings.NewReader(output))
@@ -160,9 +160,9 @@ func macCodeSignGroup(archive xcarchive.MacosArchive, installedCertificates []ce
 
 	macCodeSignGroups := export.CreateMacCodeSignGroup(codeSignGroups, installedInstallerCertificates, exportMethod)
 	if len(macCodeSignGroups) == 0 {
-		return nil, fmt.Errorf("Can not create macos codesiging groups for the project")
+		return nil, fmt.Errorf("can not create macos codesiging groups for the project")
 	} else if len(macCodeSignGroups) > 1 {
-		log.Warnf("Multiple matching  codesiging groups found for the project, using first...")
+		log.Warnf("Multiple matching codesiging groups found for the project, using first...")
 	}
 	return &(macCodeSignGroups[0]), nil
 }
@@ -359,28 +359,30 @@ func main() {
 	archiveCmd.SetScheme(cfg.Scheme)
 	archiveCmd.SetConfiguration(cfg.Configuration)
 
+	var customOptions []string
 	if cfg.ForceTeamID != "" {
 		log.Printf("Forcing Development Team: %s", cfg.ForceTeamID)
-		archiveCmd.SetForceDevelopmentTeam(cfg.ForceTeamID)
+		customOptions = append(customOptions, fmt.Sprintf("DEVELOPMENT_TEAM=%s", cfg.ForceTeamID))
 	}
 	if cfg.ForceProvisioningProfileSpecifier != "" {
 		log.Printf("Forcing Provisioning Profile Specifier: %s", cfg.ForceProvisioningProfileSpecifier)
-		archiveCmd.SetForceProvisioningProfileSpecifier(cfg.ForceProvisioningProfileSpecifier)
+		customOptions = append(customOptions, fmt.Sprintf("PROVISIONING_PROFILE_SPECIFIER=%s", cfg.ForceProvisioningProfileSpecifier))
 	}
 	if cfg.ForceProvisioningProfile != "" {
 		log.Printf("Forcing Provisioning Profile: %s", cfg.ForceProvisioningProfile)
-		archiveCmd.SetForceProvisioningProfile(cfg.ForceProvisioningProfile)
+		customOptions = append(customOptions, fmt.Sprintf("PROVISIONING_PROFILE=%s", cfg.ForceProvisioningProfile))
 	}
 	if cfg.ForceCodeSignIdentity != "" {
 		log.Printf("Forcing Code Signing Identity: %s", cfg.ForceCodeSignIdentity)
-		archiveCmd.SetForceCodeSignIdentity(cfg.ForceCodeSignIdentity)
+		customOptions = append(customOptions, fmt.Sprintf("CODE_SIGN_IDENTITY=%s", cfg.ForceCodeSignIdentity))
 	}
+
+	archiveCmd.SetCustomOptions(customOptions)
 
 	if cfg.IsCleanBuild == "yes" {
 		archiveCmd.SetCustomBuildAction("clean")
 	}
 
-	archiveCmd.SetDisableIndexWhileBuilding(cfg.DisableIndexWhileBuilding)
 	archiveCmd.SetArchivePath(archivePath)
 
 	destination := "generic/platform=macOS"
@@ -459,7 +461,7 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 	log.Donef("The xcarchive path is now available in the Environment Variable: %s (value: %s)", bitriseXCArchiveDirPthEnvKey, archivePath)
 
 	if cfg.IsExportXcarchiveZip == "yes" {
-		if err := output.ZipAndExportOutput(archivePath, archiveZipPath, bitriseXCArchivePthEnvKey); err != nil {
+		if err := output.ZipAndExportOutput([]string{archivePath}, archiveZipPath, bitriseXCArchivePthEnvKey); err != nil {
 			failf("Failed to export %s, error: %s", bitriseXCArchivePthEnvKey, err)
 		}
 
@@ -505,7 +507,7 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 		log.Donef("The app path is now available in the Environment Variable: %s (value: %s)", bitriseAppPthEnvKey, appPath)
 
 		filePath = filePath + ".zip"
-		if err := output.ZipAndExportOutput(embeddedAppPath, filePath, bitriseExportedFilePath); err != nil {
+		if err := output.ZipAndExportOutput([]string{embeddedAppPath}, filePath, bitriseExportedFilePath); err != nil {
 			failf("Failed to export %s, error: %s", bitriseExportedFilePath, err)
 		}
 
@@ -664,7 +666,7 @@ is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable (va
 				// xcdistributionlogs
 				if logsDirPth, err := findIDEDistrubutionLogsPath(xcodebuildOut); err != nil {
 					log.Warnf("Failed to find xcdistributionlogs, error: %s", err)
-				} else if err := output.ZipAndExportOutput(logsDirPth, ideDistributionLogsZipPath, bitriseIDEDistributionLogsPthEnvKey); err != nil {
+				} else if err := output.ZipAndExportOutput([]string{logsDirPth}, ideDistributionLogsZipPath, bitriseIDEDistributionLogsPthEnvKey); err != nil {
 					log.Warnf("Failed to export %s, error: %s", bitriseIDEDistributionLogsPthEnvKey, err)
 				} else {
 					criticalDistLogFilePth := filepath.Join(logsDirPth, "IDEDistribution.critical.log")
@@ -688,7 +690,7 @@ is available in the $BITRISE_IDEDISTRIBUTION_LOGS_PATH environment variable (val
 				// xcdistributionlogs
 				if logsDirPth, err := findIDEDistrubutionLogsPath(xcodebuildOut); err != nil {
 					log.Warnf("Failed to find xcdistributionlogs, error: %s", err)
-				} else if err := output.ZipAndExportOutput(logsDirPth, ideDistributionLogsZipPath, bitriseIDEDistributionLogsPthEnvKey); err != nil {
+				} else if err := output.ZipAndExportOutput([]string{logsDirPth}, ideDistributionLogsZipPath, bitriseIDEDistributionLogsPthEnvKey); err != nil {
 					log.Warnf("Failed to export %s, error: %s", bitriseIDEDistributionLogsPthEnvKey, err)
 				} else {
 					criticalDistLogFilePth := filepath.Join(logsDirPth, "IDEDistribution.critical.log")
@@ -723,7 +725,7 @@ is available in the $BITRISE_IDEDISTRIBUTION_LOGS_PATH environment variable (val
 					failf("Failed to export %s, error: %s", bitriseAppPthEnvKey, err)
 				}
 				filePath = filePath + ".zip"
-				if err := output.ZipAndExportOutput(apps[0], filePath, bitriseExportedFilePath); err != nil {
+				if err := output.ZipAndExportOutput([]string{apps[0]}, filePath, bitriseExportedFilePath); err != nil {
 					failf("Failed to export %s, error: %s", bitriseExportedFilePath, err)
 				}
 			}
@@ -738,7 +740,7 @@ is available in the $BITRISE_IDEDISTRIBUTION_LOGS_PATH environment variable (val
 	log.Infof("Exporting dSYM files ...")
 	fmt.Println()
 
-	appDSYM, frameworkDSYMs, err := archive.FindDSYMs()
+	appDSYMs, frameworkDSYMs, err := archive.FindDSYMs()
 	if err != nil {
 		failf("Failed to export dsyms, error: %s", err)
 	}
@@ -748,8 +750,10 @@ is available in the $BITRISE_IDEDISTRIBUTION_LOGS_PATH environment variable (val
 		failf("Failed to create tmp dir, error: %s", err)
 	}
 
-	if err := command.CopyDir(appDSYM, dsymDir, false); err != nil {
-		failf("Failed to copy (%s) -> (%s), error: %s", appDSYM, dsymDir, err)
+	for _, dsym := range appDSYMs {
+		if err := command.CopyDir(dsym, dsymDir, false); err != nil {
+			failf("Failed to copy (%s) -> (%s), error: %s", appDSYMs, dsymDir, err)
+		}
 	}
 
 	if cfg.IsExportAllDsyms == "yes" {
@@ -760,7 +764,7 @@ is available in the $BITRISE_IDEDISTRIBUTION_LOGS_PATH environment variable (val
 		}
 	}
 
-	if err := output.ZipAndExportOutput(dsymDir, dsymZipPath, bitriseDSYMDirPthEnvKey); err != nil {
+	if err := output.ZipAndExportOutput([]string{dsymDir}, dsymZipPath, bitriseDSYMDirPthEnvKey); err != nil {
 		failf("Failed to export %s, error: %s", bitriseDSYMDirPthEnvKey, err)
 	}
 
