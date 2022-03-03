@@ -81,7 +81,6 @@ workflows:
         - files:
         - dirs: |-
             BITRISE_MACOS_XCARCHIVE_PATH
-            BITRISE_APP_PATH
         - deployed_files: |-
             BITRISE_XCARCHIVE_PATH
             BITRISE_DSYM_PATH
