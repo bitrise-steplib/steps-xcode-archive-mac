@@ -6,11 +6,11 @@ description: |
   ### Configuring the Step
 
   Before you start:
-  
+
   Make sure your certificates are uploaded to Bitrise's **Code Signing** tab.
 
   To configure the Step:
-  
+
   Under **app/pkg export configs**:
 
   1. Select the signing method for your project Xcode should use in the **Export method** input.
@@ -20,7 +20,7 @@ description: |
 
   1. Add the path where your Xcode Project or Workspace is located in the **Project (or Workspace) path** input.
   1. Add the scheme name you want to use to archive your project in the **Scheme name** input.
-  1. (Optional) By default, your Scheme defines which configuration is used, but you can override this option in the **Configuration name** input. 
+  1. (Optional) By default, your Scheme defines which configuration is used, but you can override this option in the **Configuration name** input.
   1. In the **Clean build before archive** input, select `yes`, if you want to run a `clean xcodebuild` before the `archive` action. Select `no` to skip this.
   1. (Optional) If you wish to make your build times faster, and you don't need indexing, consider turning it off by setting **Disable indexing during the build** input to `yes`.
 
@@ -31,7 +31,7 @@ description: |
   Under **step output configs**:
 
   1. Select an `xcodebuild` command log format in the **Output tool** input. Available options are `xcpretty`: The xcodebuild command's output will be prettified by xcpretty, and `xcodebuild`: Only the last 20 lines of raw xcodebuild output will be visible in the build log. The raw xcodebuild log is exported in both cases.
-  1. Specify which directory will contain the generated `.app` or `.pkg` files and the `.dSYM.zip` files in the **Output directory** input. 
+  1. Specify which directory will contain the generated `.app` or `.pkg` files and the `.dSYM.zip` files in the **Output directory** input.
   1. Provide a name to use as a basename for the generated files in the **Generated Artifact Name** input.
   1. If you want to export the archive, set the **Export the generated archive?** input to `yes`. This will compress the generated files into a zip file and move them to a folder `output_dir`.
   1. If you want to export the dsyms, set the **Export all dsyms?** input to `yes`.
