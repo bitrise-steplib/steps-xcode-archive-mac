@@ -49,7 +49,6 @@ description: |
 
   * [Export macOS Xcode archive](https://www.bitrise.io/integrations/steps/export-xcarchive-mac)
 
-
 website: https://github.com/bitrise-steplib/steps-xcode-archive-mac
 source_code_url: https://github.com/bitrise-steplib/steps-xcode-archive-mac
 support_url: https://github.com/bitrise-steplib/steps-xcode-archive-mac/issues
