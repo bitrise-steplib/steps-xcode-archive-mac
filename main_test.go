@@ -12,7 +12,7 @@ func TestWhenForceTeamIDSpecifiedTheCreateArchiveCmdAddsDEVELOPMENT_TEAM(t *test
 
 	cmd := createArchiveCmd(opts)
 	got := cmd.PrintableCmd()
-	want := `xcodebuild "archive" "-destination" "generic/platform=macOS" DEVELOPMENT_TEAM=ABCD`
+	want := `xcodebuild "archive" "-destination" "generic/platform=macOS" "DEVELOPMENT_TEAM=ABCD"`
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("createArchiveCmd() = %v, want %v", got, want)
 	}

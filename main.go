@@ -762,6 +762,18 @@ func createArchiveCmd(opts ArchiveCommandOpts) *xcodebuild.CommandBuilder {
 	archiveCmd.SetConfiguration(opts.Configuration)
 
 	var customOptions []string
+	if opts.XcodebuildOptions != "" {
+		userOptions, err := shellquote.Split(opts.XcodebuildOptions)
+		if err != nil {
+			failf("Failed to shell split XcodebuildOptions (%s), error: %s", opts.XcodebuildOptions)
+		}
+		customOptions = userOptions
+	}
+
+	if !sliceutil.IsStringInSlice("-destination", customOptions) {
+		customOptions = append(customOptions, "-destination", "generic/platform=macOS")
+	}
+
 	if opts.ForceTeamID != "" {
 		log.Printf("Forcing Development Team: %s", opts.ForceTeamID)
 		customOptions = append(customOptions, fmt.Sprintf("DEVELOPMENT_TEAM=%s", opts.ForceTeamID))
@@ -787,20 +799,5 @@ func createArchiveCmd(opts ArchiveCommandOpts) *xcodebuild.CommandBuilder {
 
 	archiveCmd.SetArchivePath(opts.ArchivePath)
 
-	destination := "generic/platform=macOS"
-	options := []string{"-destination", destination}
-	if opts.XcodebuildOptions != "" {
-		userOptions, err := shellquote.Split(opts.XcodebuildOptions)
-		if err != nil {
-			failf("Failed to shell split XcodebuildOptions (%s), error: %s", opts.XcodebuildOptions)
-		}
-
-		if sliceutil.IsStringInSlice("-destination", userOptions) {
-			options = userOptions
-		} else {
-			options = append(options, userOptions...)
-		}
-	}
-	archiveCmd.SetCustomOptions(options)
 	return archiveCmd
 }
