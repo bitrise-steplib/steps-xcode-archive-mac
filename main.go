@@ -355,51 +355,19 @@ func main() {
 		failf("Project file extension should be .xcodeproj or .xcworkspace, but got: %s", ext)
 	}
 
-	archiveCmd := xcodebuild.NewCommandBuilder(cfg.ProjectPath, isWorkspace, xcodebuild.ArchiveAction)
-	archiveCmd.SetScheme(cfg.Scheme)
-	archiveCmd.SetConfiguration(cfg.Configuration)
-
-	var customOptions []string
-	if cfg.ForceTeamID != "" {
-		log.Printf("Forcing Development Team: %s", cfg.ForceTeamID)
-		customOptions = append(customOptions, fmt.Sprintf("DEVELOPMENT_TEAM=%s", cfg.ForceTeamID))
-	}
-	if cfg.ForceProvisioningProfileSpecifier != "" {
-		log.Printf("Forcing Provisioning Profile Specifier: %s", cfg.ForceProvisioningProfileSpecifier)
-		customOptions = append(customOptions, fmt.Sprintf("PROVISIONING_PROFILE_SPECIFIER=%s", cfg.ForceProvisioningProfileSpecifier))
-	}
-	if cfg.ForceProvisioningProfile != "" {
-		log.Printf("Forcing Provisioning Profile: %s", cfg.ForceProvisioningProfile)
-		customOptions = append(customOptions, fmt.Sprintf("PROVISIONING_PROFILE=%s", cfg.ForceProvisioningProfile))
-	}
-	if cfg.ForceCodeSignIdentity != "" {
-		log.Printf("Forcing Code Signing Identity: %s", cfg.ForceCodeSignIdentity)
-		customOptions = append(customOptions, fmt.Sprintf("CODE_SIGN_IDENTITY=%s", cfg.ForceCodeSignIdentity))
-	}
-
-	archiveCmd.SetCustomOptions(customOptions)
-
-	if cfg.IsCleanBuild == "yes" {
-		archiveCmd.SetCustomBuildAction("clean")
-	}
-
-	archiveCmd.SetArchivePath(archivePath)
-
-	destination := "generic/platform=macOS"
-	options := []string{"-destination", destination}
-	if cfg.XcodebuildOptions != "" {
-		userOptions, err := shellquote.Split(cfg.XcodebuildOptions)
-		if err != nil {
-			failf("Failed to shell split XcodebuildOptions (%s), error: %s", cfg.XcodebuildOptions)
-		}
-
-		if sliceutil.IsStringInSlice("-destination", userOptions) {
-			options = userOptions
-		} else {
-			options = append(options, userOptions...)
-		}
-	}
-	archiveCmd.SetCustomOptions(options)
+	archiveCmd := createArchiveCmd(ArchiveCommandOpts{
+		IsCleanBuild:                      cfg.IsCleanBuild,
+		ProjectPath:                       cfg.ProjectPath,
+		IsWorkspace:                       isWorkspace,
+		Scheme:                            cfg.Scheme,
+		Configuration:                     cfg.Configuration,
+		ForceTeamID:                       cfg.ForceTeamID,
+		ForceProvisioningProfileSpecifier: cfg.ForceProvisioningProfileSpecifier,
+		ForceProvisioningProfile:          cfg.ForceProvisioningProfile,
+		ForceCodeSignIdentity:             cfg.ForceCodeSignIdentity,
+		ArchivePath:                       archivePath,
+		XcodebuildOptions:                 cfg.XcodebuildOptions,
+	})
 
 	if outputTool == "xcpretty" {
 		xcprettyCmd := xcpretty.New(archiveCmd)
@@ -769,4 +737,67 @@ is available in the $BITRISE_IDEDISTRIBUTION_LOGS_PATH environment variable (val
 	}
 
 	log.Donef("The dSYM dir path is now available in the Environment Variable: %s (value: %s)", bitriseDSYMDirPthEnvKey, dsymZipPath)
+}
+
+type ArchiveCommandOpts struct {
+	IsCleanBuild string
+
+	ProjectPath   string
+	IsWorkspace   bool
+	Scheme        string
+	Configuration string
+
+	ForceTeamID                       string
+	ForceProvisioningProfileSpecifier string
+	ForceProvisioningProfile          string
+	ForceCodeSignIdentity             string
+
+	ArchivePath       string
+	XcodebuildOptions string
+}
+
+func createArchiveCmd(opts ArchiveCommandOpts) *xcodebuild.CommandBuilder {
+	archiveCmd := xcodebuild.NewCommandBuilder(opts.ProjectPath, opts.IsWorkspace, xcodebuild.ArchiveAction)
+	archiveCmd.SetScheme(opts.Scheme)
+	archiveCmd.SetConfiguration(opts.Configuration)
+
+	var customOptions []string
+	if opts.XcodebuildOptions != "" {
+		userOptions, err := shellquote.Split(opts.XcodebuildOptions)
+		if err != nil {
+			failf("Failed to shell split XcodebuildOptions (%s), error: %s", opts.XcodebuildOptions)
+		}
+		customOptions = userOptions
+	}
+
+	if !sliceutil.IsStringInSlice("-destination", customOptions) {
+		customOptions = append(customOptions, "-destination", "generic/platform=macOS")
+	}
+
+	if opts.ForceTeamID != "" {
+		log.Printf("Forcing Development Team: %s", opts.ForceTeamID)
+		customOptions = append(customOptions, fmt.Sprintf("DEVELOPMENT_TEAM=%s", opts.ForceTeamID))
+	}
+	if opts.ForceProvisioningProfileSpecifier != "" {
+		log.Printf("Forcing Provisioning Profile Specifier: %s", opts.ForceProvisioningProfileSpecifier)
+		customOptions = append(customOptions, fmt.Sprintf("PROVISIONING_PROFILE_SPECIFIER=%s", opts.ForceProvisioningProfileSpecifier))
+	}
+	if opts.ForceProvisioningProfile != "" {
+		log.Printf("Forcing Provisioning Profile: %s", opts.ForceProvisioningProfile)
+		customOptions = append(customOptions, fmt.Sprintf("PROVISIONING_PROFILE=%s", opts.ForceProvisioningProfile))
+	}
+	if opts.ForceCodeSignIdentity != "" {
+		log.Printf("Forcing Code Signing Identity: %s", opts.ForceCodeSignIdentity)
+		customOptions = append(customOptions, fmt.Sprintf("CODE_SIGN_IDENTITY=%s", opts.ForceCodeSignIdentity))
+	}
+
+	archiveCmd.SetCustomOptions(customOptions)
+
+	if opts.IsCleanBuild == "yes" {
+		archiveCmd.SetCustomBuildAction("clean")
+	}
+
+	archiveCmd.SetArchivePath(opts.ArchivePath)
+
+	return archiveCmd
 }
