@@ -757,7 +757,12 @@ type ArchiveCommandOpts struct {
 }
 
 func createArchiveCmd(opts ArchiveCommandOpts) *xcodebuild.CommandBuilder {
-	archiveCmd := xcodebuild.NewCommandBuilder(opts.ProjectPath, opts.IsWorkspace, xcodebuild.ArchiveAction)
+	actions := []string{"archive"}
+	if opts.IsCleanBuild == "yes" {
+		actions = append(actions, "clean")
+	}
+
+	archiveCmd := xcodebuild.NewCommandBuilder(opts.ProjectPath, actions...)
 	archiveCmd.SetScheme(opts.Scheme)
 	archiveCmd.SetConfiguration(opts.Configuration)
 
@@ -792,10 +797,6 @@ func createArchiveCmd(opts ArchiveCommandOpts) *xcodebuild.CommandBuilder {
 	}
 
 	archiveCmd.SetCustomOptions(customOptions)
-
-	if opts.IsCleanBuild == "yes" {
-		archiveCmd.SetCustomBuildAction("clean")
-	}
 
 	archiveCmd.SetArchivePath(opts.ArchivePath)
 
