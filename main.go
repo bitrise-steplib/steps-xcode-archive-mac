@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/bitrise-io/go-steputils/output"
@@ -16,7 +17,6 @@ import (
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-io/go-utils/sliceutil"
 	"github.com/bitrise-io/go-utils/stringutil"
 	"github.com/bitrise-io/go-xcode/certificateutil"
 	"github.com/bitrise-io/go-xcode/export"
@@ -775,7 +775,7 @@ func createArchiveCmd(opts ArchiveCommandOpts) *xcodebuild.CommandBuilder {
 		customOptions = userOptions
 	}
 
-	if !sliceutil.IsStringInSlice("-destination", customOptions) {
+	if !slices.Contains(customOptions, "-destination") {
 		customOptions = append(customOptions, "-destination", "generic/platform=macOS")
 	}
 
