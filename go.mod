@@ -1,6 +1,6 @@
 module bitrise-steplib/steps-xcode-archive-mac
 
-go 1.20
+go 1.21
 
 require (
 	github.com/bitrise-io/go-steputils v1.0.5
