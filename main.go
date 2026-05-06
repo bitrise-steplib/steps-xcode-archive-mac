@@ -2,12 +2,17 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"context"
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/bitrise-io/bitrise-build-cache-cli/v2/pkg/reactnative/wrap"
 	"github.com/bitrise-io/go-steputils/output"
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-steputils/tools"
@@ -18,6 +23,7 @@ import (
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/sliceutil"
 	"github.com/bitrise-io/go-utils/stringutil"
+	v2log "github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-io/go-xcode/certificateutil"
 	"github.com/bitrise-io/go-xcode/export"
 	"github.com/bitrise-io/go-xcode/exportoptions"
@@ -28,6 +34,77 @@ import (
 	"github.com/bitrise-io/go-xcode/xcpretty"
 	"github.com/kballard/go-shellquote"
 )
+
+// runXcodebuildWithRNWrap routes an xcodebuild invocation through
+// `bitrise-build-cache react-native run -- ...` when React Native build cache
+// is active on the host machine. Returns (combinedOutput, didRun, err) — when
+// didRun is false the caller should fall through to its existing v1 path
+// (xcpretty piping, xcprettyCmd.Run(), etc) unchanged.
+//
+// When useXcpretty is true and the wrap engages, xcpretty is preserved by
+// piping the wrapped command's stdout into a separately-spawned xcpretty
+// process, while teeing the raw output into the returned string for the
+// existing log-parsing path. When useXcpretty is false (or "xcodebuild"
+// output_tool), raw stdout/stderr is sent to the user terminal directly
+// and captured.
+//
+// Takes the *exec.Cmd produced by go-xcode v1's xcodebuild builders (.Cmd())
+// so the wrap can read the original argv (cmd.Args[0] = "xcodebuild").
+func runXcodebuildWithRNWrap(originalCmd *exec.Cmd, useXcpretty bool) (string, bool, error) {
+	det := wrap.Detect(context.Background(), wrap.DetectParams{Logger: v2log.NewLogger()})
+	if !det.ReactNativeEnabled {
+		return "", false, nil
+	}
+
+	args := originalCmd.Args
+	if len(args) == 0 {
+		return "", false, nil
+	}
+	name, wrapped := wrap.Wrap(det, args[0], args[1:])
+	display := append([]string{name}, wrapped...)
+	log.TSuccessf("$ %s", strings.Join(display, " "))
+	fmt.Println()
+
+	var combined bytes.Buffer
+	xcCmd := exec.Command(name, wrapped...) //nolint:gosec
+
+	if !useXcpretty {
+		xcCmd.Stdout = io.MultiWriter(os.Stdout, &combined)
+		xcCmd.Stderr = io.MultiWriter(os.Stderr, &combined)
+
+		return combined.String(), true, xcCmd.Run()
+	}
+
+	// xcpretty pipeline: wrapped xcodebuild stdout → xcpretty stdin, while we
+	// tee the raw output into `combined` for downstream log parsing. xcodebuild
+	// stderr is teed to user stderr + the same buffer.
+	xcprettyCmd := exec.Command("xcpretty") //nolint:gosec
+	pr, pw := io.Pipe()
+	xcCmd.Stdout = io.MultiWriter(pw, &combined)
+	xcCmd.Stderr = io.MultiWriter(os.Stderr, &combined)
+	xcprettyCmd.Stdin = pr
+	xcprettyCmd.Stdout = os.Stdout
+	xcprettyCmd.Stderr = os.Stderr
+
+	if err := xcprettyCmd.Start(); err != nil {
+		_ = pw.Close()
+
+		return "", true, fmt.Errorf("start xcpretty: %w", err)
+	}
+
+	runErr := xcCmd.Run()
+	_ = pw.Close()
+	waitErr := xcprettyCmd.Wait()
+
+	if runErr != nil {
+		return combined.String(), true, runErr
+	}
+	if waitErr != nil {
+		return combined.String(), true, waitErr
+	}
+
+	return combined.String(), true, nil
+}
 
 const (
 	bitriseXcodeRawResultTextEnvKey     = "BITRISE_XCODE_RAW_RESULT_TEXT_PATH"
@@ -369,7 +446,22 @@ func main() {
 		XcodebuildOptions:                 cfg.XcodebuildOptions,
 	})
 
-	if outputTool == "xcpretty" {
+	if rawXcodebuildOut, didRun, err := runXcodebuildWithRNWrap(archiveCmd.Command().GetCmd(), outputTool == "xcpretty"); didRun {
+		if err != nil {
+			log.Errorf("\nLast lines of the Xcode's build log:")
+			fmt.Println(stringutil.LastNLines(rawXcodebuildOut, 10))
+
+			if exportErr := output.ExportOutputFileContent(rawXcodebuildOut, rawXcodebuildOutputLogPath, bitriseXcodeRawResultTextEnvKey); exportErr != nil {
+				log.Warnf("Failed to export %s, error: %s", bitriseXcodeRawResultTextEnvKey, exportErr)
+			} else {
+				log.Warnf(`You can find the last couple of lines of Xcode's build log above, but the full log is also available in the raw-xcodebuild-output.log
+The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable
+(value: %s)`, rawXcodebuildOutputLogPath)
+			}
+
+			failf("Archive failed, error: %s", err)
+		}
+	} else if outputTool == "xcpretty" {
 		xcprettyCmd := xcpretty.New(archiveCmd)
 
 		log.TSuccessf("$ %s", xcprettyCmd.PrintableCmd())
@@ -615,7 +707,27 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 
 		exportCmd.SetExportOptionsPlist(exportOptionsPath)
 
-		if outputTool == "xcpretty" {
+		if xcodebuildOut, didRun, err := runXcodebuildWithRNWrap(exportCmd.Command().GetCmd(), outputTool == "xcpretty"); didRun {
+			if err != nil {
+				if logsDirPth, ferr := findIDEDistrubutionLogsPath(xcodebuildOut); ferr != nil {
+					log.Warnf("Failed to find xcdistributionlogs, error: %s", ferr)
+				} else if zerr := output.ZipAndExportOutput([]string{logsDirPth}, ideDistributionLogsZipPath, bitriseIDEDistributionLogsPthEnvKey); zerr != nil {
+					log.Warnf("Failed to export %s, error: %s", bitriseIDEDistributionLogsPthEnvKey, zerr)
+				} else {
+					criticalDistLogFilePth := filepath.Join(logsDirPth, "IDEDistribution.critical.log")
+					log.Warnf("IDEDistribution.critical.log:")
+					if criticalDistLog, rerr := fileutil.ReadStringFromFile(criticalDistLogFilePth); rerr == nil {
+						log.Printf(criticalDistLog)
+					}
+
+					log.Warnf(`If you can't find the reason of the error in the log, please check the xcdistributionlogs
+The logs directory is stored in $BITRISE_DEPLOY_DIR, and its full path
+is available in the $BITRISE_IDEDISTRIBUTION_LOGS_PATH environment variable (value: %s)`, ideDistributionLogsZipPath)
+				}
+
+				failf("Export failed, error: %s", err)
+			}
+		} else if outputTool == "xcpretty" {
 			xcprettyCmd := xcpretty.New(exportCmd)
 
 			log.Donef("$ %s", xcprettyCmd.PrintableCmd())
