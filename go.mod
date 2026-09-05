@@ -1,6 +1,6 @@
 module bitrise-steplib/steps-xcode-archive-mac
 
-go 1.20
+go 1.25.0
 
 require (
 	github.com/bitrise-io/go-steputils v1.0.5
@@ -15,6 +15,6 @@ require (
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
-	golang.org/x/crypto v0.12.0 // indirect
+	golang.org/x/crypto v0.52.0 // indirect
 	howett.net/plist v1.0.0 // indirect
 )
