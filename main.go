@@ -18,11 +18,13 @@ import (
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/sliceutil"
 	"github.com/bitrise-io/go-utils/stringutil"
+	v2log "github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-io/go-xcode/certificateutil"
 	"github.com/bitrise-io/go-xcode/export"
 	"github.com/bitrise-io/go-xcode/exportoptions"
 	"github.com/bitrise-io/go-xcode/profileutil"
 	"github.com/bitrise-io/go-xcode/utility"
+	v2xcpretty "github.com/bitrise-io/go-xcode/v2/xcpretty"
 	"github.com/bitrise-io/go-xcode/xcarchive"
 	"github.com/bitrise-io/go-xcode/xcodebuild"
 	"github.com/bitrise-io/go-xcode/xcpretty"
@@ -167,6 +169,61 @@ func macCodeSignGroup(archive xcarchive.MacosArchive, installedCertificates []ce
 	return &(macCodeSignGroups[0]), nil
 }
 
+// selectLogFormatter makes sure xcpretty is installed and can report its version, and falls back to xcodebuild's
+// own output when it cannot. Nothing here is fatal: the Step formats the log with whatever is available.
+func selectLogFormatter(outputTool string) string {
+	if outputTool != "xcpretty" {
+		return outputTool
+	}
+
+	fmt.Println()
+	log.Infof("Checking if output tool (xcpretty) is installed")
+
+	formatter := v2xcpretty.NewXcpretty(v2log.NewLogger())
+
+	installed, err := formatter.IsInstalled()
+	if err != nil {
+		log.Warnf("Failed to check if xcpretty is installed: %s", err)
+		log.Printf("Switching to xcodebuild for output tool")
+		return "xcodebuild"
+	}
+
+	if !installed {
+		log.Warnf("xcpretty is not installed")
+		fmt.Println()
+		log.Printf("Installing xcpretty")
+
+		cmds, err := formatter.Install()
+		if err != nil {
+			log.Warnf("Failed to create xcpretty install command: %s", err)
+			log.Warnf("Switching to xcodebuild for output tool")
+			return "xcodebuild"
+		}
+
+		for _, cmd := range cmds {
+			if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
+				if errorutil.IsExitStatusError(err) {
+					log.Warnf("%s failed: %s", cmd.PrintableCommandArgs(), out)
+				} else {
+					log.Warnf("%s failed: %s", cmd.PrintableCommandArgs(), err)
+				}
+				log.Warnf("Switching to xcodebuild for output tool")
+				return "xcodebuild"
+			}
+		}
+	}
+
+	xcprettyVersion, err := formatter.Version()
+	if err != nil {
+		log.Warnf("Failed to determine xcpretty version: %s", err)
+		log.Printf("Switching to xcodebuild for output tool")
+		return "xcodebuild"
+	}
+	log.Printf("- xcprettyVersion: %s", xcprettyVersion.String())
+
+	return outputTool
+}
+
 func main() {
 	var cfg config
 	if err := stepconf.Parse(&cfg); err != nil {
@@ -186,50 +243,7 @@ func main() {
 	}
 	log.Printf("- xcodebuild_version: %s (%s)", xcodebuildVersion.Version, xcodebuildVersion.BuildVersion)
 
-	outputTool := cfg.OutputTool
-	if outputTool == "xcpretty" {
-		fmt.Println()
-		log.Infof("Checking if output tool (xcpretty) is installed")
-
-		installed, err := xcpretty.IsInstalled()
-		if err != nil {
-			log.Warnf("Failed to check if xcpretty is installed, error: %s", err)
-			log.Printf("Switching to xcodebuild for output tool")
-			outputTool = "xcodebuild"
-		} else if !installed {
-			log.Warnf("xcpretty is not installed")
-			fmt.Println()
-			log.Printf("Installing xcpretty")
-
-			if cmds, err := xcpretty.Install(); err != nil {
-				log.Warnf("Failed to create xcpretty install command: %s", err)
-				log.Warnf("Switching to xcodebuild for output tool")
-				outputTool = "xcodebuild"
-			} else {
-				for _, cmd := range cmds {
-					if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
-						if errorutil.IsExitStatusError(err) {
-							log.Warnf("%s failed: %s", out)
-						} else {
-							log.Warnf("%s failed: %s", err)
-						}
-						log.Warnf("Switching to xcodebuild for output tool")
-						outputTool = "xcodebuild"
-					}
-				}
-			}
-		}
-	}
-
-	if outputTool == "xcpretty" {
-		xcprettyVersion, err := xcpretty.Version()
-		if err != nil {
-			log.Warnf("Failed to determine xcpretty version, error: %s", err)
-			log.Printf("Switching to xcodebuild for output tool")
-			outputTool = "xcodebuild"
-		}
-		log.Printf("- xcprettyVersion: %s", xcprettyVersion.String())
-	}
+	outputTool := selectLogFormatter(cfg.OutputTool)
 
 	// Validation CustomExportOptionsPlistContent
 	if cfg.CustomExportOptionsPlistContent != "" &&
